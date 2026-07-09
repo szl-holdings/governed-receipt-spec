@@ -1,0 +1,212 @@
+[
+  {
+    "id": "b21b907b33cf4430a3864f1b378241d2b0984f8c1306fbc1e95d7de1c27c7817",
+    "kind": "receipt",
+    "payload": {
+      "asset": "receipt",
+      "envelope": {
+        "_dsse": "DSSEv1",
+        "_pae_sha256": "7541ce8850a4d99f520c6866f66a143ba16c8535394fb3187ae26dc6162c0856",
+        "_signed_at": "2026-06-28T02:35:30.744513+00:00",
+        "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+        "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiMDAzMmY5NzFhMjQ5ZDgxMTMwMTg2OTI4MjNiNGMyNDE4MmY0MTM3YmMxNGJhOGY2Njc0ZDc1ZTQ4YWNjMzE1OSIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6Ijc3YzcxZDAwNDZiOWMyZjk2MjZkZDJlNzU5NjA3M2JlMjc3YzI1MTVlN2NlYzAyMjdhM2YxMzg4ZWMyNmNjMDYiLCJwcmV2IjoiMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsInNlcSI6MCwic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjE0MTMwLjc0NDQzNjN9",
+        "payloadType": "application/vnd.szl.khipu+json",
+        "signatures": [
+          {
+            "keyid": "szlholdings-cosign",
+            "sig": "MEQCIH9URx/V0k/bTJy5/lLxyzGXfGN5sZ9Uqu6GVd7dDRwtAiAMBvDQg7J5wEi42aYadFPDrIi0c4AtKlIjGKOEszGqtA=="
+          }
+        ],
+        "signed": true,
+        "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+      },
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "meta": {
+        "surface": "khipu"
+      },
+      "published_at": "2026-06-28T02:35:30.763644+00:00",
+      "receipt_uid": "7541ce8850a4d99f520c6866f66a143ba16c8535394fb3187ae26dc6162c0856",
+      "schema": "szl.a11oy.corpus.record/v1",
+      "scheme": "ecdsa-p256-dsse-pae",
+      "verify": {
+        "algorithm": "ECDSA-P256-SHA256 over DSSE PAE (DSSEv1)",
+        "how_to_verify": "Reconstruct PAE = b'DSSEv1 ' + len(payloadType) + ' ' + payloadType + ' ' + len(payload) + ' ' + payload (payload = base64-decoded), then verify signatures[].sig (base64) against the published cosign.pub with ECDSA-P256-SHA256. Live endpoint: POST /api/a11oy/khipu/verify.",
+        "keyid": "szlholdings-cosign",
+        "public_key_sha256": "d3028f8aecd0841f684e1c7fd7b06de7a211dc6fc09c34163003798b391bcf71",
+        "public_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub",
+        "scheme": "ecdsa-p256-dsse-pae"
+      }
+    },
+    "schema": "szl.hf.bucket.record/v1",
+    "source": "a11oy",
+    "ts": "2026-06-28T02:35:30.763696Z"
+  },
+  {
+    "id": "be3b9136e136e57845f2947bc85f5df3b07327917106c487fab4f97cc8c439b0",
+    "kind": "receipt",
+    "payload": {
+      "asset": "receipt",
+      "envelope": {
+        "_dsse": "DSSEv1",
+        "_pae_sha256": "6cb72a1f750705b5dc26edd651c0a3ab2af2c9c06ccb9d5632515f59b0a57641",
+        "_signed_at": "2026-06-28T02:35:43.348467+00:00",
+        "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+        "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiN2IzOGJjMjk2MzYzM2I4ZTE3NTMxM2EyMGE2Yjk3NTBjODAwZWI4YWJjYTRlYzMwYmJiZGI2MjU3NzNhMTljMiIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6Ijc3YzcxZDAwNDZiOWMyZjk2MjZkZDJlNzU5NjA3M2JlMjc3YzI1MTVlN2NlYzAyMjdhM2YxMzg4ZWMyNmNjMDYiLCJwcmV2IjoiMDAzMmY5NzFhMjQ5ZDgxMTMwMTg2OTI4MjNiNGMyNDE4MmY0MTM3YmMxNGJhOGY2Njc0ZDc1ZTQ4YWNjMzE1OSIsInNlcSI6MSwic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjE0MTQzLjM0ODQwNTZ9",
+        "payloadType": "application/vnd.szl.khipu+json",
+        "signatures": [
+          {
+            "keyid": "szlholdings-cosign",
+            "sig": "MEYCIQDGxhei0fW97H6TQUdWER7oKVh3KEVSlp+p2QJEWItT/QIhAPsh83jkK7UySdeLoTReSjut9YUnGKHhkqlPKlw+KhRp"
+          }
+        ],
+        "signed": true,
+        "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+      },
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "meta": {
+        "surface": "khipu"
+      },
+      "published_at": "2026-06-28T02:35:43.348924+00:00",
+      "receipt_uid": "6cb72a1f750705b5dc26edd651c0a3ab2af2c9c06ccb9d5632515f59b0a57641",
+      "schema": "szl.a11oy.corpus.record/v1",
+      "scheme": "ecdsa-p256-dsse-pae",
+      "verify": {
+        "algorithm": "ECDSA-P256-SHA256 over DSSE PAE (DSSEv1)",
+        "how_to_verify": "Reconstruct PAE = b'DSSEv1 ' + len(payloadType) + ' ' + payloadType + ' ' + len(payload) + ' ' + payload (payload = base64-decoded), then verify signatures[].sig (base64) against the published cosign.pub with ECDSA-P256-SHA256. Live endpoint: POST /api/a11oy/khipu/verify.",
+        "keyid": "szlholdings-cosign",
+        "public_key_sha256": "d3028f8aecd0841f684e1c7fd7b06de7a211dc6fc09c34163003798b391bcf71",
+        "public_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub",
+        "scheme": "ecdsa-p256-dsse-pae"
+      }
+    },
+    "schema": "szl.hf.bucket.record/v1",
+    "source": "a11oy",
+    "ts": "2026-06-28T02:35:43.348965Z"
+  },
+  {
+    "id": "d97a4a6e617352ccc27e826fd86154246935bb23ec8e069929b1d556e060514e",
+    "kind": "receipt",
+    "payload": {
+      "asset": "receipt",
+      "envelope": {
+        "_dsse": "DSSEv1",
+        "_pae_sha256": "51fa00836c15637576c0292362ace458ec50ababe8b151127787b87c4aba61ce",
+        "_signed_at": "2026-06-28T02:36:03.755264+00:00",
+        "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+        "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiZjQxMDVjMzliN2Y4NmYzOWQ1OGYyNzY5ODgyNWMxYTkzYWFmZGM0YmFmZmFmMmVkZTMwMGNkM2FiNGVhMTk5NiIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6Ijc3YzcxZDAwNDZiOWMyZjk2MjZkZDJlNzU5NjA3M2JlMjc3YzI1MTVlN2NlYzAyMjdhM2YxMzg4ZWMyNmNjMDYiLCJwcmV2IjoiN2IzOGJjMjk2MzYzM2I4ZTE3NTMxM2EyMGE2Yjk3NTBjODAwZWI4YWJjYTRlYzMwYmJiZGI2MjU3NzNhMTljMiIsInNlcSI6Miwic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjE0MTYzLjc1NTE5NDR9",
+        "payloadType": "application/vnd.szl.khipu+json",
+        "signatures": [
+          {
+            "keyid": "szlholdings-cosign",
+            "sig": "MEUCIFYbgGx91VmEOLD+8Jvvw3/mDKztvYMb81gJiMRheZ6tAiEAwf5uwDzCdGcBTLVnWaww0ktSC134281CRUICJKi7W1U="
+          }
+        ],
+        "signed": true,
+        "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+      },
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "meta": {
+        "surface": "khipu"
+      },
+      "published_at": "2026-06-28T02:36:03.755598+00:00",
+      "receipt_uid": "51fa00836c15637576c0292362ace458ec50ababe8b151127787b87c4aba61ce",
+      "schema": "szl.a11oy.corpus.record/v1",
+      "scheme": "ecdsa-p256-dsse-pae",
+      "verify": {
+        "algorithm": "ECDSA-P256-SHA256 over DSSE PAE (DSSEv1)",
+        "how_to_verify": "Reconstruct PAE = b'DSSEv1 ' + len(payloadType) + ' ' + payloadType + ' ' + len(payload) + ' ' + payload (payload = base64-decoded), then verify signatures[].sig (base64) against the published cosign.pub with ECDSA-P256-SHA256. Live endpoint: POST /api/a11oy/khipu/verify.",
+        "keyid": "szlholdings-cosign",
+        "public_key_sha256": "d3028f8aecd0841f684e1c7fd7b06de7a211dc6fc09c34163003798b391bcf71",
+        "public_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub",
+        "scheme": "ecdsa-p256-dsse-pae"
+      }
+    },
+    "schema": "szl.hf.bucket.record/v1",
+    "source": "a11oy",
+    "ts": "2026-06-28T02:36:03.755631Z"
+  },
+  {
+    "id": "19293d7411b0ec84e64639701c575ea9a39d167b03382cfbce754ea2773a298d",
+    "kind": "receipt",
+    "payload": {
+      "asset": "receipt",
+      "envelope": {
+        "_dsse": "DSSEv1",
+        "_pae_sha256": "339e8dfa0c80da42d64d296ac7b563f5752692f9877e00f73cf33ea28af62f63",
+        "_signed_at": "2026-06-28T02:36:10.209658+00:00",
+        "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+        "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiNzdjNzFlYzdkMDMzNzRlZjJmYWI2N2VjMmI2MzVjMTY2MjIxNWUxOWVlNzg0NDI1YzljNWQ2OTViOTliZWI1MiIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6IjIyODFiMjkyY2ViNzJjZDg4ZTAxZjYyNTExM2JjN2ExMDE3ZDE1N2Y1MDc3NWFhYTgwMTA4NWY4YWNlMGE1OTQiLCJwcmV2IjoiZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZmRlYWRiZWVmZGVhZGJlZWZkZWFkYmVlZiIsInNlcSI6Mywic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjE0MTcwLjIwOTYwNH0=",
+        "payloadType": "application/vnd.szl.khipu+json",
+        "signatures": [
+          {
+            "keyid": "szlholdings-cosign",
+            "sig": "MEYCIQCFtxaAyCWo3Bk5hHBp/+nqEK0IJQmgoLUY0G9FS3BMuQIhAKML3yUImPFojm/caMoKRg/lSg9AkftecdScES9Eo+DZ"
+          }
+        ],
+        "signed": true,
+        "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+      },
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "meta": {
+        "surface": "khipu"
+      },
+      "published_at": "2026-06-28T02:36:10.209975+00:00",
+      "receipt_uid": "339e8dfa0c80da42d64d296ac7b563f5752692f9877e00f73cf33ea28af62f63",
+      "schema": "szl.a11oy.corpus.record/v1",
+      "scheme": "ecdsa-p256-dsse-pae",
+      "verify": {
+        "algorithm": "ECDSA-P256-SHA256 over DSSE PAE (DSSEv1)",
+        "how_to_verify": "Reconstruct PAE = b'DSSEv1 ' + len(payloadType) + ' ' + payloadType + ' ' + len(payload) + ' ' + payload (payload = base64-decoded), then verify signatures[].sig (base64) against the published cosign.pub with ECDSA-P256-SHA256. Live endpoint: POST /api/a11oy/khipu/verify.",
+        "keyid": "szlholdings-cosign",
+        "public_key_sha256": "d3028f8aecd0841f684e1c7fd7b06de7a211dc6fc09c34163003798b391bcf71",
+        "public_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub",
+        "scheme": "ecdsa-p256-dsse-pae"
+      }
+    },
+    "schema": "szl.hf.bucket.record/v1",
+    "source": "a11oy",
+    "ts": "2026-06-28T02:36:10.210012Z"
+  },
+  {
+    "id": "6c5f63fc1e08bea762b829aea4be84e586df2d335da4afb51d56ef3a83835979",
+    "kind": "receipt",
+    "payload": {
+      "asset": "receipt",
+      "envelope": {
+        "_dsse": "DSSEv1",
+        "_pae_sha256": "6d14b760273e2b3a1e6c631bc5d2962e140b2b4b3f09ed870936ab27cf2ec5db",
+        "_signed_at": "2026-06-28T03:09:30.214323+00:00",
+        "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+        "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiODY1MDA4MGVmZDcxZDRkZGY4ODRlNzZlOGFlYzY3OTE3OWYzYzY5OGQ1NzFkZDBjNDI3MTIzODFiMGRkZTk0YSIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6ImE1MGRiM2E1ZGE4NTI3ODNkMWI2NTE4OTgxZDY2ZjcxYTA3ZjY5ODg1NzBmYWI5NzFkNWYxYmQ0NzFiZTgyYWIiLCJwcmV2IjoiNzdjNzFlYzdkMDMzNzRlZjJmYWI2N2VjMmI2MzVjMTY2MjIxNWUxOWVlNzg0NDI1YzljNWQ2OTViOTliZWI1MiIsInNlcSI6NCwic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjE2MTcwLjIxNDI1M30=",
+        "payloadType": "application/vnd.szl.khipu+json",
+        "signatures": [
+          {
+            "keyid": "szlholdings-cosign",
+            "sig": "MEQCIFPF2fcFsd0WwQZDlPO9baNrn9YysYl5DjDPdy8GMRCgAiAOXF/pzD0JRL24vDCgMa9m1jXlJqbPT2jj0ygH5MPjyg=="
+          }
+        ],
+        "signed": true,
+        "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+      },
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "meta": {
+        "surface": "khipu"
+      },
+      "published_at": "2026-06-28T03:09:30.214641+00:00",
+      "receipt_uid": "6d14b760273e2b3a1e6c631bc5d2962e140b2b4b3f09ed870936ab27cf2ec5db",
+      "schema": "szl.a11oy.corpus.record/v1",
+      "scheme": "ecdsa-p256-dsse-pae",
+      "verify": {
+        "algorithm": "ECDSA-P256-SHA256 over DSSE PAE (DSSEv1)",
+        "how_to_verify": "Reconstruct PAE = b'DSSEv1 ' + len(payloadType) + ' ' + payloadType + ' ' + len(payload) + ' ' + payload (payload = base64-decoded), then verify signatures[].sig (base64) against the published cosign.pub with ECDSA-P256-SHA256. Live endpoint: POST /api/a11oy/khipu/verify.",
+        "keyid": "szlholdings-cosign",
+        "public_key_sha256": "d3028f8aecd0841f684e1c7fd7b06de7a211dc6fc09c34163003798b391bcf71",
+        "public_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub",
+        "scheme": "ecdsa-p256-dsse-pae"
+      }
+    },
+    "schema": "szl.hf.bucket.record/v1",
+    "source": "a11oy",
+    "ts": "2026-06-28T03:09:30.214670Z"
+  }
+]

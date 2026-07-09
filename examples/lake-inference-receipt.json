@@ -1,0 +1,68 @@
+{
+  "id": "cebfc11f1e7b32771db41c2ca4630c7b92766a2a26d28fc651c8a87fb32a7808",
+  "kind": "lake_receipt",
+  "payload": {
+    "action": "inference",
+    "chain_verified": true,
+    "decision": "allow",
+    "digest": "357322b3dc36ddbbc5205c184f40d32321174721196cf5c34e3d374219b3f3a4",
+    "dsse": {
+      "_dsse": "DSSEv1",
+      "_pae_sha256": "e169fb1553e6b92293ba83166ae70764f51a2af3f35ec91a4efbc52e0d1f9c8d",
+      "_signed_at": "2026-06-28T06:52:21.586436+00:00",
+      "honesty": "REAL — ECDSA-P256-SHA256 over DSSE PAE; verifiable by `cosign verify-blob --key cosign.pub` and by the /khipu/verify endpoint.",
+      "payload": "eyJhY3Rpb24iOiJpbmZlcmVuY2UiLCJjaGFpbl92ZXJpZmllZCI6dHJ1ZSwiZGlnZXN0IjoiMzU3MzIyYjNkYzM2ZGRiYmM1MjA1YzE4NGY0MGQzMjMyMTE3NDcyMTE5NmNmNWMzNGUzZDM3NDIxOWIzZjNhNCIsIm5ldXJvX2NpdGF0aW9ucyI6W10sIm5zIjoiYTExb3kiLCJvcmdhbiI6InZlcnRpY2FsLWdlbmVyYWwiLCJwYXlsb2FkX2RpZ2VzdCI6ImYzNmU4NDgyYWJmMmI2MTZiOWRmMjA0NjY0MDQ0NjhkZGFlMGIwZmM4Yjc2YjEyYjhlN2UxYzNjZDBkYjAyODIiLCJwcmV2IjoiMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsInNlcSI6MCwic2lnbmF0dXJlIjoiRFNTRV9QTEFDRUhPTERFUiIsInRzIjoxNzgyNjI5NTQxLjU4NjM2MX0=",
+      "payloadType": "application/vnd.szl.khipu+json",
+      "signatures": [
+        {
+          "keyid": "szlholdings-cosign",
+          "sig": "MEQCIAHmKoxsxQnrFzW0BMxEKarbx11G8tLEqMRlIcnDLuuLAiBO5mc09vSqpGWQ6dmc+G9C8urkaveVOIg9P2XPgXasHQ=="
+        }
+      ],
+      "signed": true,
+      "verify_key_url": "https://github.com/szl-holdings/.github/blob/main/cosign.pub"
+    },
+    "energy": {
+      "evidence": {
+        "after": {
+          "aggregated": false,
+          "engines": [
+            {
+              "engine": "Sovereign GPU 2 (tower · RTX 4060 Ti · anchor)",
+              "meter": "",
+              "note": "unknown url type: '/'",
+              "reachable": false
+            }
+          ]
+        },
+        "before": {
+          "aggregated": false,
+          "engines": [
+            {
+              "engine": "Sovereign GPU 2 (tower · RTX 4060 Ti · anchor)",
+              "meter": "",
+              "note": "unknown url type: '/'",
+              "reachable": false
+            }
+          ]
+        },
+        "note": "joule NOT fabricated; not attributed across nodes",
+        "reason": "serving engine has no live NVML meter",
+        "served_by": "Sovereign GPU 2 (tower · RTX 4060 Ti · anchor)"
+      },
+      "joules": null,
+      "label": "UNAVAILABLE"
+    },
+    "neuro_citations": [],
+    "ns": "a11oy",
+    "organ": "vertical-general",
+    "payload_digest": "f36e8482abf2b616b9df20466404468ddae0b0fc8b76b12b8e7e1c3cd0db0282",
+    "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+    "seq": 0,
+    "signature": "DSSE_PLACEHOLDER",
+    "ts": 1782629541.586361
+  },
+  "schema": "szl.hf.bucket.record/v1",
+  "source": "a11oy",
+  "ts": "2026-06-28T06:52:26.403509Z"
+}

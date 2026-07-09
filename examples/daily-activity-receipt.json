@@ -1,0 +1,11 @@
+{
+  "payloadType": "application/vnd.szl.daily-activity+json",
+  "payload": "eyJ0eXBlIjoic3psL2RhaWx5LWFjdGl2aXR5LXJlY2VpcHQvdjEiLCJ0aW1lc3RhbXAiOiIyMDI2LTA3LTA5VDExOjA0OjAxLjM0OTk0MVoiLCJkYXRlIjoiMjAyNi0wNy0wOSIsInNvdXJjZSI6ImdpdGh1Yi1hY3Rpb25zL3N6bC1ob2xkaW5ncy8uZ2l0aHViL2hmLWRhaWx5LWFjdGl2aXR5LnltbCIsImNvdW50cyI6eyJzcGFjZXMiOjEyLCJkYXRhc2V0cyI6MjcsIm1vZGVscyI6OCwiY29sbGVjdGlvbnMiOjIwfSwibW9ja2VkIjpmYWxzZX0=",
+  "signatures": [
+    {
+      "sig": "f333ebd6ac1e5c4d680786aaac27e5483893fc97b6a5d85c816bb2c3092ca0ca",
+      "keyid": "szl-hmac-sha256-v1"
+    }
+  ],
+  "signing": "hmac-stub"
+}
