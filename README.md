@@ -62,6 +62,8 @@ It prints a clear `PASS` / `FAIL` per receipt with reasons, and exits non-zero o
 
 > Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, and the `prev ↔ digest` chain. Full signature verification of the DSSE `ECDSA-P256` signature is done upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url`.
 
+**Prefer to click?** Paste any receipt into the live verifier Space — **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — which runs this exact `verify.py` in your browser (via Pyodide, no upload). Or run against the benchmark corpus **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled tampers (must FAIL).
+
 ---
 
 ## Examples (real data)
@@ -89,6 +91,8 @@ Valid examples must pass; tampered fixtures ([`tests/fixtures/`](tests/fixtures)
 
 ## The estate
 
+- **Live verifier Space:** **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — paste a receipt, verify it in your browser (runs this `verify.py` via Pyodide).
+- **Benchmark corpus:** **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (PASS) + labeled tampers (FAIL) for conformance testing.
 - Live console: **[a-11-oy.com](https://a-11-oy.com)** · a11oy console `szlholdings-a11oy.hf.space`
 - Hugging Face org: **[SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS)** — receipt datasets (`a11oy-verifiable-corpus`, `readiness-runs`, `szl-evidence`) and the **Governed Kernels** collection (`szl-lambda-gate`, `szl-blocked`, `governed-inference-meter`, …).
 - GitHub org: **[szl-holdings](https://github.com/szl-holdings)**
