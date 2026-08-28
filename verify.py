@@ -395,6 +395,10 @@ def check_clear_claim_binding(record, envelope, schema):
         return False, "cannot bind clear claims: %s" % (
             error or "sealed payload is not an object"
         )
+    sealed_bytes = base64.b64decode(envelope["payload"], validate=True)
+    envelope_pae_sha256 = hashlib.sha256(
+        dsse_pae(envelope.get("payloadType", ""), sealed_bytes)
+    ).hexdigest()
 
     layers = []
     if isinstance(payload, dict) and (
@@ -416,6 +420,7 @@ def check_clear_claim_binding(record, envelope, schema):
             and clear.get("schema") == "szl.a11oy.corpus.record/v1"
             and isinstance(clear.get("receipt_uid"), str)
             and re.fullmatch(r"[0-9a-f]{64}", clear["receipt_uid"]) is not None
+            and clear["receipt_uid"] == envelope_pae_sha256
         )
         dataset_role = (
             clear.get("kind") in {"receipt", "lake_receipt"}

@@ -180,6 +180,30 @@ class ValidExamplesPass(unittest.TestCase):
         self.assertFalse(ok)
         self.assertTrue(any("ts" in line and "UNBOUND" in line for line in lines))
 
+    def test_top_level_publication_uid_must_match_envelope_pae(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            source = json.load(receipts)[0]["payload"]
+        for receipt_uid, expected_ok in (
+            (source["receipt_uid"], True),
+            ("f" * 64, False),
+        ):
+            with self.subTest(receipt_uid=receipt_uid, expected_ok=expected_ok):
+                record = {
+                    "envelope": json.loads(json.dumps(source["envelope"])),
+                    "asset": "receipt",
+                    "receipt_uid": receipt_uid,
+                    "scheme": "ecdsa-p256-dsse-pae",
+                    "schema": "szl.a11oy.corpus.record/v1",
+                }
+                ok, lines = verify.verify_records([record], SCHEMA)
+                self.assertEqual(expected_ok, ok, "\n".join(lines))
+                if not expected_ok:
+                    self.assertTrue(
+                        any("receipt_uid" in line and "UNBOUND" in line for line in lines),
+                        "\n".join(lines),
+                    )
+
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
         self.assertTrue(ok, "\n".join(lines))
