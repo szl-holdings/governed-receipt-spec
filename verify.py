@@ -376,11 +376,15 @@ def check_clear_claim_binding(record, envelope, schema):
         )
     transport = {"dsse", "envelope"}
     clear_claims = set(clear) - transport
+    provenance_metadata = {
+        "asset", "honesty", "meta", "published_at", "receipt_uid",
+        "schema", "scheme", "verify",
+    }
     # Outer provenance wrappers (for example the A11oy publication wrapper)
     # contain only metadata plus an envelope. Binding applies when the wrapper
     # duplicates at least one sealed decision field; in that form every clear
     # non-transport field is a claim that must be sealed identically.
-    if not clear_claims.intersection(sealed):
+    if clear_claims.issubset(provenance_metadata):
         return True, "outer wrapper contains no duplicated sealed claims (n/a)"
     unbound = sorted(
         key

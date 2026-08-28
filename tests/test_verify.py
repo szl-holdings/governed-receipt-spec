@@ -53,6 +53,18 @@ class ValidExamplesPass(unittest.TestCase):
         self.assertTrue(any("decision" in line and "UNBOUND" in line for line in lines))
         self.assertTrue(any("authorization" in line for line in lines), "\n".join(lines))
 
+    def test_outer_wrapper_rejects_unsealed_authorization(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["payload"]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(
+            any("authorization" in line and "UNBOUND" in line for line in lines),
+            "\n".join(lines),
+        )
+
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
         self.assertTrue(ok, "\n".join(lines))
