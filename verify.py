@@ -353,6 +353,48 @@ def check_dsse_structure(envelope):
     return True, "DSSE envelope well-formed (%s, %d signature(s))" % (kind, len(sigs))
 
 
+def check_clear_claim_binding(record, envelope, schema):
+    """Require clear schema claims to be present identically in sealed bytes.
+
+    Some legacy lake records duplicate a decoded decision beside a nested DSSE
+    envelope. The envelope authenticates only its decoded payload; clear-only
+    governance fields must therefore never inherit the envelope's PASS state.
+    """
+    if not isinstance(record, dict) or envelope is None:
+        return True, "no clear/envelope claim boundary (n/a)"
+    clear = record.get("payload")
+    if not isinstance(clear, dict):
+        return True, "no clear/envelope claim boundary (n/a)"
+    nested = clear.get("envelope") or clear.get("dsse")
+    if nested is not envelope:
+        return True, "no clear/envelope claim boundary (n/a)"
+
+    sealed, error = _decode_envelope_payload(envelope)
+    if not isinstance(sealed, dict):
+        return False, "cannot bind clear claims: %s" % (
+            error or "sealed payload is not an object"
+        )
+    transport = {"dsse", "envelope"}
+    clear_claims = set(clear) - transport
+    # Outer provenance wrappers (for example the A11oy publication wrapper)
+    # contain only metadata plus an envelope. Binding applies when the wrapper
+    # duplicates at least one sealed decision field; in that form every clear
+    # non-transport field is a claim that must be sealed identically.
+    if not clear_claims.intersection(sealed):
+        return True, "outer wrapper contains no duplicated sealed claims (n/a)"
+    unbound = sorted(
+        key
+        for key in clear_claims
+        if key not in sealed or clear[key] != sealed[key]
+    )
+    if unbound:
+        return False, (
+            "UNBOUND clear claim(s) absent or different in sealed "
+            "payload: %s" % ", ".join(unbound)
+        )
+    return True, "all duplicated clear schema claims match sealed payload"
+
+
 # --------------------------------------------------------------------------- #
 # Chain check                                                                  #
 # --------------------------------------------------------------------------- #
@@ -418,6 +460,11 @@ def verify_records(records, schema):
         h_ok, h_msg = check_content_hash(record, envelope)
         ok = ok and h_ok
         lines.append("    hash:   %s %s" % ("PASS" if h_ok else "FAIL", h_msg))
+
+        # Clear wrapper claims must be bound to the exact sealed payload.
+        b_ok, b_msg = check_clear_claim_binding(record, envelope, schema)
+        ok = ok and b_ok
+        lines.append("    bind:   %s %s" % ("PASS" if b_ok else "FAIL", b_msg))
 
         # (a) schema (inference receipts only)
         if is_inference_receipt(decision):

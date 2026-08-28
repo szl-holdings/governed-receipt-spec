@@ -13,7 +13,15 @@ jobs:
       - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: "3.12"
-      - name: Run the offline verifier on the real examples
-        run: python verify.py examples/*.json
+      - name: Verify bound examples and reject the documented legacy gap
+        run: |
+          python verify.py \
+            examples/a11oy-khipu-chain.json \
+            examples/daily-activity-receipt.json \
+            examples/readiness-audit-receipt.json
+          if python verify.py examples/lake-inference-receipt.json; then
+            echo "legacy clear-only lake claims unexpectedly passed" >&2
+            exit 1
+          fi
       - name: Run the unittest suite (stdlib only)
         run: python -m unittest discover -s tests -v

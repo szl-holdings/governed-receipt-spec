@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Standard-library unittest suite for verify.py.
 
-Runs the offline verifier against the real example receipts (which must PASS)
-and against tampered fixtures (which must FAIL). No third-party dependencies.
+Runs the offline verifier against bound examples, a documented legacy unbound
+example, and tampered fixtures. No third-party dependencies.
 
 Run from the repo root:
     python -m unittest discover -s tests -v
@@ -10,6 +10,7 @@ or:
     python tests/test_verify.py
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -36,9 +37,21 @@ class ValidExamplesPass(unittest.TestCase):
         self.assertTrue(ok, "\n".join(lines))
         self.assertTrue(any("hash chain intact" in ln for ln in lines))
 
-    def test_lake_inference_receipt_passes(self):
+    def test_legacy_lake_clear_claims_fail_unbound(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "lake-inference-receipt.json"))
-        self.assertTrue(ok, "\n".join(lines))
+        self.assertFalse(ok)
+        self.assertTrue(any("UNBOUND" in line for line in lines), "\n".join(lines))
+
+    def test_lake_clear_claim_tampering_stays_unbound(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            record = json.load(receipt)
+        record["payload"]["decision"] = "deny"
+        record["payload"]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("decision" in line and "UNBOUND" in line for line in lines))
+        self.assertTrue(any("authorization" in line for line in lines), "\n".join(lines))
 
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
