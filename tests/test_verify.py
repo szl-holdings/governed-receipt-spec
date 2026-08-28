@@ -131,6 +131,44 @@ class FailClosedInputTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("not strict base64", message)
 
+    def test_false_signed_marker_rejects_declared_signatures(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": False,
+            "signatures": [{"sig": "c2ln"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("signed=false but signatures is not empty", message)
+
+    def test_true_signed_marker_requires_a_signature(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": True,
+            "signatures": [],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("signed=true but signatures is empty", message)
+
+    def test_signed_marker_rejects_non_boolean_substitutions(self):
+        for marker in (1, "true"):
+            with self.subTest(marker=marker):
+                envelope = {
+                    "payloadType": "application/json",
+                    "payload": "e30=",
+                    "payloadSha256": "0" * 64,
+                    "signed": marker,
+                    "signatures": [],
+                }
+                ok, message = verify.check_dsse_structure(envelope)
+                self.assertFalse(ok)
+                self.assertIn("signed marker must be a boolean", message)
+
 class SchemaUnitTests(unittest.TestCase):
     def _minimal(self):
         return {

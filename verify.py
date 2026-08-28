@@ -322,10 +322,15 @@ def check_dsse_structure(envelope):
     if not isinstance(sigs, list):
         problems.append("signatures missing/not a list")
         sigs = []
+    signed_present = "signed" in envelope
     signed = envelope.get("signed")
-    if signed is True:
+    if signed_present and type(signed) is not bool:
+        problems.append("signed marker must be a boolean when present")
+    elif signed is True:
         if not sigs:
             problems.append("signed=true but signatures is empty")
+    elif signed is False and sigs:
+        problems.append("signed=false but signatures is not empty")
     for i, s in enumerate(sigs):
         if not isinstance(s, dict) or "sig" not in s:
             problems.append("signature[%d] missing 'sig'" % i)
@@ -340,7 +345,7 @@ def check_dsse_structure(envelope):
             problems.append("signature[%d] 'sig' not strict base64" % i)
     if problems:
         return False, "; ".join(problems)
-    kind = "signed" if signed else "unsigned"
+    kind = "signed" if signed is True else "unsigned"
     return True, "DSSE envelope well-formed (%s, %d signature(s))" % (kind, len(sigs))
 
 
