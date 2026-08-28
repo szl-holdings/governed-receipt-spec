@@ -12,6 +12,7 @@ or:
 
 import os
 import sys
+import tempfile
 import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -71,6 +72,53 @@ class TamperedFixturesFail(unittest.TestCase):
             "broken-chain fixture should still pass the hash check",
         )
 
+
+class FailClosedInputTests(unittest.TestCase):
+    def test_empty_record_list_fails(self):
+        ok, lines = verify.verify_records([], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("no receipt records found" in ln for ln in lines))
+
+    def test_empty_file_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "empty.json")
+            with open(path, "w", encoding="utf-8"):
+                pass
+            ok, lines = _verify(path)
+        self.assertFalse(ok)
+        self.assertTrue(any("no receipt records found" in ln for ln in lines))
+
+    def test_unsupported_object_fails(self):
+        ok, lines = verify.verify_records([{}], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("unsupported record" in ln for ln in lines))
+
+    def test_payload_requires_strict_base64(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=!!!!",
+            "payloadSha256": "0" * 64,
+            "signed": False,
+            "signatures": [],
+        }
+        decoded, error = verify._decode_envelope_payload(envelope)
+        self.assertIsNone(decoded)
+        self.assertIn("not valid base64", error)
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not base64-decodable", message)
+
+    def test_signed_envelope_signature_requires_strict_base64(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": True,
+            "signatures": [{"sig": "not-base64!!!!"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not strict base64", message)
 
 class SchemaUnitTests(unittest.TestCase):
     def _minimal(self):

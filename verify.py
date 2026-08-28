@@ -213,7 +213,7 @@ def _find_envelope(record):
 
 def _decode_envelope_payload(envelope):
     try:
-        raw = base64.b64decode(envelope["payload"])
+        raw = base64.b64decode(envelope["payload"], validate=True)
     except Exception as exc:  # noqa: BLE001
         return None, "payload is not valid base64 (%s)" % exc
     try:
@@ -274,7 +274,7 @@ def check_content_hash(record, envelope):
     """Recompute and check the content hash. Returns (ok, message)."""
     if envelope is not None:
         try:
-            body = base64.b64decode(envelope["payload"])
+            body = base64.b64decode(envelope["payload"], validate=True)
         except Exception as exc:  # noqa: BLE001
             return False, "envelope payload not base64: %s" % exc
         ptype = envelope.get("payloadType", "")
@@ -315,7 +315,7 @@ def check_dsse_structure(envelope):
         problems.append("payload missing/not a string")
     else:
         try:
-            base64.b64decode(envelope["payload"])
+            base64.b64decode(envelope["payload"], validate=True)
         except Exception:  # noqa: BLE001
             problems.append("payload not base64-decodable")
     sigs = envelope.get("signatures")
@@ -329,6 +329,15 @@ def check_dsse_structure(envelope):
         for i, s in enumerate(sigs):
             if not isinstance(s, dict) or "sig" not in s:
                 problems.append("signature[%d] missing 'sig'" % i)
+                continue
+            sig = s["sig"]
+            if not isinstance(sig, str) or not sig:
+                problems.append("signature[%d] 'sig' missing/empty" % i)
+                continue
+            try:
+                base64.b64decode(sig, validate=True)
+            except Exception:  # noqa: BLE001
+                problems.append("signature[%d] 'sig' not strict base64" % i)
     if problems:
         return False, "; ".join(problems)
     kind = "signed" if signed else "unsigned"
@@ -379,6 +388,9 @@ def check_chain(decisions):
 # --------------------------------------------------------------------------- #
 def verify_records(records, schema):
     """Verify a list of records. Returns (ok, report_lines)."""
+    if not records:
+        return False, ["- records: FAIL no receipt records found"]
+
     lines = []
     ok = True
     decisions = []
@@ -411,8 +423,13 @@ def verify_records(records, schema):
                     lines.append("            - %s" % e)
             decisions.append(decision)
         else:
-            lines.append("    schema: SKIP non-inference receipt "
-                         "(envelope + hash checks only)")
+            if envelope is None:
+                ok = False
+                lines.append("    schema: FAIL unsupported record has no "
+                             "inference decision or DSSE envelope")
+            else:
+                lines.append("    schema: SKIP non-inference receipt "
+                             "(envelope + hash checks only)")
 
     # (c) chain across inference receipts
     c_ok, c_msgs = check_chain(decisions)
