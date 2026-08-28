@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Standard-library unittest suite for verify.py.
 
-Runs the offline verifier against the real example receipts (which must PASS)
-and against tampered fixtures (which must FAIL). No third-party dependencies.
+Runs the offline verifier against bound examples, a documented legacy unbound
+example, and tampered fixtures. No third-party dependencies.
 
 Run from the repo root:
     python -m unittest discover -s tests -v
@@ -10,8 +10,12 @@ or:
     python tests/test_verify.py
 """
 
+import base64
+import hashlib
+import json
 import os
 import sys
+import tempfile
 import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -35,9 +39,170 @@ class ValidExamplesPass(unittest.TestCase):
         self.assertTrue(ok, "\n".join(lines))
         self.assertTrue(any("hash chain intact" in ln for ln in lines))
 
-    def test_lake_inference_receipt_passes(self):
+    def test_legacy_lake_clear_claims_fail_unbound(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "lake-inference-receipt.json"))
+        self.assertFalse(ok)
+        self.assertTrue(any("UNBOUND" in line for line in lines), "\n".join(lines))
+
+    def test_lake_clear_claim_tampering_stays_unbound(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            record = json.load(receipt)
+        record["payload"]["decision"] = "deny"
+        record["payload"]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("decision" in line and "UNBOUND" in line for line in lines))
+        self.assertTrue(any("authorization" in line for line in lines), "\n".join(lines))
+
+    def test_outer_wrapper_rejects_unsealed_authorization(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["payload"]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(
+            any("authorization" in line and "UNBOUND" in line for line in lines),
+            "\n".join(lines),
+        )
+
+    def test_top_level_envelope_rejects_unsealed_clear_claim(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            lake = json.load(receipt)
+        record = {"dsse": lake["payload"]["dsse"], "decision": "deny"}
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("decision" in line and "UNBOUND" in line for line in lines))
+
+    def test_envelope_rejects_unbound_extension_claim(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["payload"]["envelope"]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(
+            any("authorization" in line and "UNBOUND" in line for line in lines),
+            "\n".join(lines),
+        )
+
+    def test_parent_wrapper_rejects_unsealed_authorization(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("authorization" in line and "UNBOUND" in line for line in lines))
+
+    def test_nested_receipt_field_is_not_exempt_metadata(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            lake = json.load(receipt)
+        record = {"payload": {"dsse": lake["payload"]["dsse"], "ts": "arbitrary"}}
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ts" in line and "UNBOUND" in line for line in lines))
+
+    def test_rejects_unselected_sibling_envelope(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["payload"]["dsse"] = {"payloadType": "application/json"}
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ambiguous envelope" in line for line in lines), "\n".join(lines))
+
+    def test_rejects_envelopes_across_wrapper_levels(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["envelope"] = dict(records[0]["payload"]["envelope"])
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ambiguous envelope" in line for line in lines), "\n".join(lines))
+
+    def test_flat_envelope_accepts_opaque_payload(self):
+        body = b"opaque receipt bytes"
+        envelope = {
+            "payloadType": "application/octet-stream",
+            "payload": base64.b64encode(body).decode("ascii"),
+            "payloadSha256": hashlib.sha256(body).hexdigest(),
+            "signed": False,
+            "signatures": [],
+        }
+        ok, lines = verify.verify_records([envelope], SCHEMA)
         self.assertTrue(ok, "\n".join(lines))
+        self.assertTrue(any("payloadSha256 verified" in line for line in lines))
+
+    def test_bound_claim_comparison_is_json_type_aware(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            original = json.load(receipt)
+        for sealed_value, clear_value in ((True, 1), (False, 0)):
+            with self.subTest(sealed=sealed_value, clear=clear_value):
+                record = json.loads(json.dumps(original))
+                envelope = record["payload"]["dsse"]
+                body = json.loads(base64.b64decode(envelope["payload"], validate=True))
+                body["authorization"] = sealed_value
+                raw = json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                envelope["payload"] = base64.b64encode(raw).decode("ascii")
+                envelope["_pae_sha256"] = hashlib.sha256(
+                    verify.dsse_pae(envelope["payloadType"], raw)
+                ).hexdigest()
+                record["payload"]["authorization"] = clear_value
+                ok, lines = verify.verify_records([record], SCHEMA)
+                self.assertFalse(ok)
+                self.assertTrue(
+                    any("authorization" in line and "UNBOUND" in line for line in lines),
+                    "\n".join(lines),
+                )
+
+    def test_spoofed_provenance_markers_do_not_exempt_receipt_fields(self):
+        path = os.path.join(EXAMPLES, "readiness-audit-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            envelope = json.load(receipt)
+        sealed = json.loads(base64.b64decode(envelope["payload"], validate=True))
+        record = {
+            "payload": {
+                "dsse": envelope,
+                "payload": sealed["payload"],
+                "id": "attacker-controlled",
+                "kind": "receipt",
+                "schema": "attacker-controlled",
+                "source": "attacker-controlled",
+                "ts": "arbitrary",
+            }
+        }
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ts" in line and "UNBOUND" in line for line in lines))
+
+    def test_top_level_publication_uid_must_match_envelope_pae(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            source = json.load(receipts)[0]["payload"]
+        for receipt_uid, expected_ok in (
+            (source["receipt_uid"], True),
+            ("f" * 64, False),
+        ):
+            with self.subTest(receipt_uid=receipt_uid, expected_ok=expected_ok):
+                record = {
+                    "envelope": json.loads(json.dumps(source["envelope"])),
+                    "asset": "receipt",
+                    "receipt_uid": receipt_uid,
+                    "scheme": "ecdsa-p256-dsse-pae",
+                    "schema": "szl.a11oy.corpus.record/v1",
+                }
+                ok, lines = verify.verify_records([record], SCHEMA)
+                self.assertEqual(expected_ok, ok, "\n".join(lines))
+                if not expected_ok:
+                    self.assertTrue(
+                        any("receipt_uid" in line and "UNBOUND" in line for line in lines),
+                        "\n".join(lines),
+                    )
 
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
@@ -71,6 +236,113 @@ class TamperedFixturesFail(unittest.TestCase):
             "broken-chain fixture should still pass the hash check",
         )
 
+
+class FailClosedInputTests(unittest.TestCase):
+    def test_empty_record_list_fails(self):
+        ok, lines = verify.verify_records([], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("no receipt records found" in ln for ln in lines))
+
+    def test_empty_file_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "empty.json")
+            with open(path, "w", encoding="utf-8"):
+                pass
+            ok, lines = _verify(path)
+        self.assertFalse(ok)
+        self.assertTrue(any("no receipt records found" in ln for ln in lines))
+
+    def test_unsupported_object_fails(self):
+        ok, lines = verify.verify_records([{}], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("unsupported record" in ln for ln in lines))
+
+    def test_payload_requires_strict_base64(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=!!!!",
+            "payloadSha256": "0" * 64,
+            "signed": False,
+            "signatures": [],
+        }
+        decoded, error = verify._decode_envelope_payload(envelope)
+        self.assertIsNone(decoded)
+        self.assertIn("not valid base64", error)
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not base64-decodable", message)
+
+    def test_signed_envelope_signature_requires_strict_base64(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": True,
+            "signatures": [{"sig": "not-base64!!!!"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not strict base64", message)
+
+    def test_signature_requires_strict_base64_without_signed_marker(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signatures": [{"sig": "!!!!"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not strict base64", message)
+
+    def test_signatures_without_marker_are_reported_as_signed(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signatures": [{"sig": "c2ln"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertTrue(ok, message)
+        self.assertIn("well-formed (signed, 1 signature(s))", message)
+
+    def test_false_signed_marker_rejects_declared_signatures(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": False,
+            "signatures": [{"sig": "c2ln"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("signed=false but signatures is not empty", message)
+
+    def test_true_signed_marker_requires_a_signature(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signed": True,
+            "signatures": [],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("signed=true but signatures is empty", message)
+
+    def test_signed_marker_rejects_non_boolean_substitutions(self):
+        for marker in (1, "true"):
+            with self.subTest(marker=marker):
+                envelope = {
+                    "payloadType": "application/json",
+                    "payload": "e30=",
+                    "payloadSha256": "0" * 64,
+                    "signed": marker,
+                    "signatures": [],
+                }
+                ok, message = verify.check_dsse_structure(envelope)
+                self.assertFalse(ok)
+                self.assertIn("signed marker must be a boolean", message)
 
 class SchemaUnitTests(unittest.TestCase):
     def _minimal(self):

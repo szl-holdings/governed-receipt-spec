@@ -213,7 +213,7 @@ def _find_envelope(record):
 
 def _decode_envelope_payload(envelope):
     try:
-        raw = base64.b64decode(envelope["payload"])
+        raw = base64.b64decode(envelope["payload"], validate=True)
     except Exception as exc:  # noqa: BLE001
         return None, "payload is not valid base64 (%s)" % exc
     try:
@@ -274,7 +274,7 @@ def check_content_hash(record, envelope):
     """Recompute and check the content hash. Returns (ok, message)."""
     if envelope is not None:
         try:
-            body = base64.b64decode(envelope["payload"])
+            body = base64.b64decode(envelope["payload"], validate=True)
         except Exception as exc:  # noqa: BLE001
             return False, "envelope payload not base64: %s" % exc
         ptype = envelope.get("payloadType", "")
@@ -315,24 +315,149 @@ def check_dsse_structure(envelope):
         problems.append("payload missing/not a string")
     else:
         try:
-            base64.b64decode(envelope["payload"])
+            base64.b64decode(envelope["payload"], validate=True)
         except Exception:  # noqa: BLE001
             problems.append("payload not base64-decodable")
     sigs = envelope.get("signatures")
     if not isinstance(sigs, list):
         problems.append("signatures missing/not a list")
         sigs = []
+    signed_present = "signed" in envelope
     signed = envelope.get("signed")
-    if signed is True:
+    if signed_present and type(signed) is not bool:
+        problems.append("signed marker must be a boolean when present")
+    elif signed is True:
         if not sigs:
             problems.append("signed=true but signatures is empty")
-        for i, s in enumerate(sigs):
-            if not isinstance(s, dict) or "sig" not in s:
-                problems.append("signature[%d] missing 'sig'" % i)
+    elif signed is False and sigs:
+        problems.append("signed=false but signatures is not empty")
+    for i, s in enumerate(sigs):
+        if not isinstance(s, dict) or "sig" not in s:
+            problems.append("signature[%d] missing 'sig'" % i)
+            continue
+        sig = s["sig"]
+        if not isinstance(sig, str) or not sig:
+            problems.append("signature[%d] 'sig' missing/empty" % i)
+            continue
+        try:
+            base64.b64decode(sig, validate=True)
+        except Exception:  # noqa: BLE001
+            problems.append("signature[%d] 'sig' not strict base64" % i)
     if problems:
         return False, "; ".join(problems)
-    kind = "signed" if signed else "unsigned"
+    kind = (
+        "signed"
+        if signed is True or (not signed_present and bool(sigs))
+        else "unsigned"
+    )
     return True, "DSSE envelope well-formed (%s, %d signature(s))" % (kind, len(sigs))
+
+
+def check_clear_claim_binding(record, envelope, schema):
+    """Require clear schema claims to be present identically in sealed bytes.
+
+    Some legacy lake records duplicate a decoded decision beside a nested DSSE
+    envelope. The envelope authenticates only its decoded payload; clear-only
+    governance fields must therefore never inherit the envelope's PASS state.
+    """
+    if not isinstance(record, dict) or envelope is None:
+        return True, "no clear/envelope claim boundary (n/a)"
+
+    envelope_fields = {
+        "_dsse", "_pae_sha256", "_signed_at", "honesty", "payload",
+        "payloadSha256", "payloadType", "signatures", "signed", "signing",
+        "verify_key_url",
+    }
+    unknown_envelope_fields = sorted(set(envelope) - envelope_fields)
+    if unknown_envelope_fields:
+        return False, "UNBOUND envelope extension claim(s): %s" % ", ".join(
+            unknown_envelope_fields
+        )
+
+    if record is envelope:
+        return True, "flat envelope contains no external clear claims (n/a)"
+
+    payload = record.get("payload")
+    envelope_locations = []
+    for wrapper_name, wrapper in (("record", record), ("payload", payload)):
+        if not isinstance(wrapper, dict):
+            continue
+        for key in ("envelope", "dsse"):
+            if key in wrapper:
+                envelope_locations.append("%s.%s" % (wrapper_name, key))
+    if len(envelope_locations) != 1:
+        return False, "UNBOUND ambiguous envelope locations: %s" % ", ".join(
+            envelope_locations or ["none"]
+        )
+
+    sealed, error = _decode_envelope_payload(envelope)
+    if not isinstance(sealed, dict):
+        return False, "cannot bind clear claims: %s" % (
+            error or "sealed payload is not an object"
+        )
+    sealed_bytes = base64.b64decode(envelope["payload"], validate=True)
+    envelope_pae_sha256 = hashlib.sha256(
+        dsse_pae(envelope.get("payloadType", ""), sealed_bytes)
+    ).hexdigest()
+
+    layers = []
+    if isinstance(payload, dict) and (
+        payload.get("envelope") is envelope or payload.get("dsse") is envelope
+    ):
+        layers.append((payload, {"envelope", "dsse"}))
+        layers.append((record, {"payload"}))
+    elif record.get("envelope") is envelope or record.get("dsse") is envelope:
+        layers.append((record, {"envelope", "dsse"}))
+    else:
+        return True, "no clear/envelope claim boundary (n/a)"
+
+    unbound = []
+    for clear, transport in layers:
+        metadata = set()
+        publication_role = (
+            clear.get("asset") == "receipt"
+            and clear.get("scheme") == "ecdsa-p256-dsse-pae"
+            and clear.get("schema") == "szl.a11oy.corpus.record/v1"
+            and isinstance(clear.get("receipt_uid"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", clear["receipt_uid"]) is not None
+            and clear["receipt_uid"] == envelope_pae_sha256
+        )
+        dataset_role = (
+            clear.get("kind") in {"receipt", "lake_receipt"}
+            and clear.get("schema") == "szl.hf.bucket.record/v1"
+            and clear.get("source") == "a11oy"
+            and isinstance(clear.get("id"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", clear["id"]) is not None
+            and isinstance(clear.get("ts"), str)
+            and re.fullmatch(
+                r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z",
+                clear["ts"],
+            ) is not None
+        )
+        if publication_role:
+            metadata = {
+                "asset", "honesty", "meta", "published_at", "receipt_uid",
+                "schema", "scheme", "verify",
+            }
+        elif "payload" in clear and dataset_role:
+            metadata = {"id", "kind", "schema", "source", "ts"}
+        for key in set(clear) - transport - metadata:
+            same_json = key in sealed and json.dumps(
+                clear[key], sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False,
+            ) == json.dumps(
+                sealed[key], sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            if not same_json:
+                unbound.append(key)
+    unbound = sorted(set(unbound))
+    if unbound:
+        return False, (
+            "UNBOUND clear claim(s) absent or different in sealed "
+            "payload: %s" % ", ".join(unbound)
+        )
+    return True, "all clear claims across wrapper ancestors match sealed payload"
 
 
 # --------------------------------------------------------------------------- #
@@ -379,6 +504,9 @@ def check_chain(decisions):
 # --------------------------------------------------------------------------- #
 def verify_records(records, schema):
     """Verify a list of records. Returns (ok, report_lines)."""
+    if not records:
+        return False, ["- records: FAIL no receipt records found"]
+
     lines = []
     ok = True
     decisions = []
@@ -398,6 +526,11 @@ def verify_records(records, schema):
         ok = ok and h_ok
         lines.append("    hash:   %s %s" % ("PASS" if h_ok else "FAIL", h_msg))
 
+        # Clear wrapper claims must be bound to the exact sealed payload.
+        b_ok, b_msg = check_clear_claim_binding(record, envelope, schema)
+        ok = ok and b_ok
+        lines.append("    bind:   %s %s" % ("PASS" if b_ok else "FAIL", b_msg))
+
         # (a) schema (inference receipts only)
         if is_inference_receipt(decision):
             errs = validate(decision, schema)
@@ -411,8 +544,13 @@ def verify_records(records, schema):
                     lines.append("            - %s" % e)
             decisions.append(decision)
         else:
-            lines.append("    schema: SKIP non-inference receipt "
-                         "(envelope + hash checks only)")
+            if envelope is None:
+                ok = False
+                lines.append("    schema: FAIL unsupported record has no "
+                             "inference decision or DSSE envelope")
+            else:
+                lines.append("    schema: SKIP non-inference receipt "
+                             "(envelope + hash checks only)")
 
     # (c) chain across inference receipts
     c_ok, c_msgs = check_chain(decisions)

@@ -73,7 +73,7 @@ Every file in [`examples/`](examples/) is drawn factually from public SZL datase
 | File | Source dataset | Shows |
 | --- | --- | --- |
 | `a11oy-khipu-chain.json` | `SZLHOLDINGS/a11oy-verifiable-corpus` (`receipts/`) | a 5-receipt signed hash chain (`seq` 0→4) |
-| `lake-inference-receipt.json` | `SZLHOLDINGS/a11oy-verifiable-corpus` (`lake/`) | `decision` + measured-or-null `energy` in the clear |
+| `lake-inference-receipt.json` | `SZLHOLDINGS/a11oy-verifiable-corpus` (`lake/`) | Legacy negative example: `decision` + `energy` exist only in the clear wrapper and therefore verify as `UNBOUND` / FAIL |
 | `readiness-audit-receipt.json` | `SZLHOLDINGS/readiness-runs` | unsigned envelope with `payloadSha256` |
 | `daily-activity-receipt.json` | `SZLHOLDINGS/szl-evidence` | HMAC-stub daily activity receipt |
 
