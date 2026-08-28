@@ -362,11 +362,28 @@ def check_clear_claim_binding(record, envelope, schema):
     """
     if not isinstance(record, dict) or envelope is None:
         return True, "no clear/envelope claim boundary (n/a)"
-    clear = record.get("payload")
-    if not isinstance(clear, dict):
-        return True, "no clear/envelope claim boundary (n/a)"
-    nested = clear.get("envelope") or clear.get("dsse")
-    if nested is not envelope:
+
+    envelope_fields = {
+        "_dsse", "_pae_sha256", "_signed_at", "honesty", "payload",
+        "payloadSha256", "payloadType", "signatures", "signed", "signing",
+        "verify_key_url",
+    }
+    unknown_envelope_fields = sorted(set(envelope) - envelope_fields)
+    if unknown_envelope_fields:
+        return False, "UNBOUND envelope extension claim(s): %s" % ", ".join(
+            unknown_envelope_fields
+        )
+
+    payload = record.get("payload")
+    if isinstance(payload, dict) and (
+        payload.get("envelope") is envelope or payload.get("dsse") is envelope
+    ):
+        clear = payload
+    elif record.get("envelope") is envelope or record.get("dsse") is envelope:
+        clear = record
+    elif record is envelope:
+        return True, "flat envelope contains no external clear claims (n/a)"
+    else:
         return True, "no clear/envelope claim boundary (n/a)"
 
     sealed, error = _decode_envelope_payload(envelope)
@@ -378,17 +395,18 @@ def check_clear_claim_binding(record, envelope, schema):
     clear_claims = set(clear) - transport
     provenance_metadata = {
         "asset", "honesty", "meta", "published_at", "receipt_uid",
-        "schema", "scheme", "verify",
+        "id", "kind", "schema", "scheme", "source", "ts", "verify",
     }
     # Outer provenance wrappers (for example the A11oy publication wrapper)
     # contain only metadata plus an envelope. Binding applies when the wrapper
     # duplicates at least one sealed decision field; in that form every clear
     # non-transport field is a claim that must be sealed identically.
-    if clear_claims.issubset(provenance_metadata):
+    substantive_claims = clear_claims - provenance_metadata
+    if not substantive_claims:
         return True, "outer wrapper contains no duplicated sealed claims (n/a)"
     unbound = sorted(
         key
-        for key in clear_claims
+        for key in substantive_claims
         if key not in sealed or clear[key] != sealed[key]
     )
     if unbound:
