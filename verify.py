@@ -345,7 +345,11 @@ def check_dsse_structure(envelope):
             problems.append("signature[%d] 'sig' not strict base64" % i)
     if problems:
         return False, "; ".join(problems)
-    kind = "signed" if signed is True else "unsigned"
+    kind = (
+        "signed"
+        if signed is True or (not signed_present and bool(sigs))
+        else "unsigned"
+    )
     return True, "DSSE envelope well-formed (%s, %d signature(s))" % (kind, len(sigs))
 
 

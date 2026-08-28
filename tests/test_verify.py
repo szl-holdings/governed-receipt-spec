@@ -131,6 +131,17 @@ class FailClosedInputTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("not strict base64", message)
 
+    def test_signatures_without_marker_are_reported_as_signed(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signatures": [{"sig": "c2ln"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertTrue(ok, message)
+        self.assertIn("well-formed (signed, 1 signature(s))", message)
+
     def test_false_signed_marker_rejects_declared_signatures(self):
         envelope = {
             "payloadType": "application/json",
