@@ -86,6 +86,33 @@ class ValidExamplesPass(unittest.TestCase):
             "\n".join(lines),
         )
 
+    def test_parent_wrapper_rejects_unsealed_authorization(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["authorization"] = "arbitrary"
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("authorization" in line and "UNBOUND" in line for line in lines))
+
+    def test_nested_receipt_field_is_not_exempt_metadata(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            lake = json.load(receipt)
+        record = {"payload": {"dsse": lake["payload"]["dsse"], "ts": "arbitrary"}}
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ts" in line and "UNBOUND" in line for line in lines))
+
+    def test_rejects_unselected_sibling_envelope(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["payload"]["dsse"] = {"payloadType": "application/json"}
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ambiguous sibling" in line for line in lines), "\n".join(lines))
+
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
         self.assertTrue(ok, "\n".join(lines))

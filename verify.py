@@ -374,47 +374,50 @@ def check_clear_claim_binding(record, envelope, schema):
             unknown_envelope_fields
         )
 
-    payload = record.get("payload")
-    if isinstance(payload, dict) and (
-        payload.get("envelope") is envelope or payload.get("dsse") is envelope
-    ):
-        clear = payload
-    elif record.get("envelope") is envelope or record.get("dsse") is envelope:
-        clear = record
-    elif record is envelope:
-        return True, "flat envelope contains no external clear claims (n/a)"
-    else:
-        return True, "no clear/envelope claim boundary (n/a)"
-
     sealed, error = _decode_envelope_payload(envelope)
     if not isinstance(sealed, dict):
         return False, "cannot bind clear claims: %s" % (
             error or "sealed payload is not an object"
         )
-    transport = {"dsse", "envelope"}
-    clear_claims = set(clear) - transport
-    provenance_metadata = {
-        "asset", "honesty", "meta", "published_at", "receipt_uid",
-        "id", "kind", "schema", "scheme", "source", "ts", "verify",
-    }
-    # Outer provenance wrappers (for example the A11oy publication wrapper)
-    # contain only metadata plus an envelope. Binding applies when the wrapper
-    # duplicates at least one sealed decision field; in that form every clear
-    # non-transport field is a claim that must be sealed identically.
-    substantive_claims = clear_claims - provenance_metadata
-    if not substantive_claims:
-        return True, "outer wrapper contains no duplicated sealed claims (n/a)"
-    unbound = sorted(
-        key
-        for key in substantive_claims
-        if key not in sealed or clear[key] != sealed[key]
-    )
+
+    payload = record.get("payload")
+    layers = []
+    if isinstance(payload, dict) and (
+        payload.get("envelope") is envelope or payload.get("dsse") is envelope
+    ):
+        if "envelope" in payload and "dsse" in payload:
+            return False, "UNBOUND ambiguous sibling envelope and dsse fields"
+        layers.append((payload, {"envelope", "dsse"}))
+        layers.append((record, {"payload"}))
+    elif record.get("envelope") is envelope or record.get("dsse") is envelope:
+        if "envelope" in record and "dsse" in record:
+            return False, "UNBOUND ambiguous sibling envelope and dsse fields"
+        layers.append((record, {"envelope", "dsse"}))
+    elif record is envelope:
+        return True, "flat envelope contains no external clear claims (n/a)"
+    else:
+        return True, "no clear/envelope claim boundary (n/a)"
+
+    unbound = []
+    for clear, transport in layers:
+        metadata = set()
+        if {"asset", "receipt_uid", "scheme"}.issubset(clear):
+            metadata = {
+                "asset", "honesty", "meta", "published_at", "receipt_uid",
+                "schema", "scheme", "verify",
+            }
+        elif "payload" in clear and {"id", "kind", "source"}.issubset(clear):
+            metadata = {"id", "kind", "schema", "source", "ts"}
+        for key in set(clear) - transport - metadata:
+            if key not in sealed or clear[key] != sealed[key]:
+                unbound.append(key)
+    unbound = sorted(set(unbound))
     if unbound:
         return False, (
             "UNBOUND clear claim(s) absent or different in sealed "
             "payload: %s" % ", ".join(unbound)
         )
-    return True, "all duplicated clear schema claims match sealed payload"
+    return True, "all clear claims across wrapper ancestors match sealed payload"
 
 
 # --------------------------------------------------------------------------- #
