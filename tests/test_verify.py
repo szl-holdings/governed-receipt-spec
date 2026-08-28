@@ -160,6 +160,26 @@ class ValidExamplesPass(unittest.TestCase):
                     "\n".join(lines),
                 )
 
+    def test_spoofed_provenance_markers_do_not_exempt_receipt_fields(self):
+        path = os.path.join(EXAMPLES, "readiness-audit-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            envelope = json.load(receipt)
+        sealed = json.loads(base64.b64decode(envelope["payload"], validate=True))
+        record = {
+            "payload": {
+                "dsse": envelope,
+                "payload": sealed["payload"],
+                "id": "attacker-controlled",
+                "kind": "receipt",
+                "schema": "attacker-controlled",
+                "source": "attacker-controlled",
+                "ts": "arbitrary",
+            }
+        }
+        ok, lines = verify.verify_records([record], SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ts" in line and "UNBOUND" in line for line in lines))
+
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
         self.assertTrue(ok, "\n".join(lines))

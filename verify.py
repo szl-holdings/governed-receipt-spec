@@ -410,12 +410,31 @@ def check_clear_claim_binding(record, envelope, schema):
     unbound = []
     for clear, transport in layers:
         metadata = set()
-        if {"asset", "receipt_uid", "scheme"}.issubset(clear):
+        publication_role = (
+            clear.get("asset") == "receipt"
+            and clear.get("scheme") == "ecdsa-p256-dsse-pae"
+            and clear.get("schema") == "szl.a11oy.corpus.record/v1"
+            and isinstance(clear.get("receipt_uid"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", clear["receipt_uid"]) is not None
+        )
+        dataset_role = (
+            clear.get("kind") in {"receipt", "lake_receipt"}
+            and clear.get("schema") == "szl.hf.bucket.record/v1"
+            and clear.get("source") == "a11oy"
+            and isinstance(clear.get("id"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", clear["id"]) is not None
+            and isinstance(clear.get("ts"), str)
+            and re.fullmatch(
+                r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z",
+                clear["ts"],
+            ) is not None
+        )
+        if publication_role:
             metadata = {
                 "asset", "honesty", "meta", "published_at", "receipt_uid",
                 "schema", "scheme", "verify",
             }
-        elif "payload" in clear and {"id", "kind", "source"}.issubset(clear):
+        elif "payload" in clear and dataset_role:
             metadata = {"id", "kind", "schema", "source", "ts"}
         for key in set(clear) - transport - metadata:
             same_json = key in sealed and json.dumps(
