@@ -137,6 +137,29 @@ class ValidExamplesPass(unittest.TestCase):
         self.assertTrue(ok, "\n".join(lines))
         self.assertTrue(any("payloadSha256 verified" in line for line in lines))
 
+    def test_bound_claim_comparison_is_json_type_aware(self):
+        path = os.path.join(EXAMPLES, "lake-inference-receipt.json")
+        with open(path, "r", encoding="utf-8") as receipt:
+            original = json.load(receipt)
+        for sealed_value, clear_value in ((True, 1), (False, 0)):
+            with self.subTest(sealed=sealed_value, clear=clear_value):
+                record = json.loads(json.dumps(original))
+                envelope = record["payload"]["dsse"]
+                body = json.loads(base64.b64decode(envelope["payload"], validate=True))
+                body["authorization"] = sealed_value
+                raw = json.dumps(body, sort_keys=True, separators=(",", ":")).encode("utf-8")
+                envelope["payload"] = base64.b64encode(raw).decode("ascii")
+                envelope["_pae_sha256"] = hashlib.sha256(
+                    verify.dsse_pae(envelope["payloadType"], raw)
+                ).hexdigest()
+                record["payload"]["authorization"] = clear_value
+                ok, lines = verify.verify_records([record], SCHEMA)
+                self.assertFalse(ok)
+                self.assertTrue(
+                    any("authorization" in line and "UNBOUND" in line for line in lines),
+                    "\n".join(lines),
+                )
+
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))
         self.assertTrue(ok, "\n".join(lines))

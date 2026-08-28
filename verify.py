@@ -418,7 +418,14 @@ def check_clear_claim_binding(record, envelope, schema):
         elif "payload" in clear and {"id", "kind", "source"}.issubset(clear):
             metadata = {"id", "kind", "schema", "source", "ts"}
         for key in set(clear) - transport - metadata:
-            if key not in sealed or clear[key] != sealed[key]:
+            same_json = key in sealed and json.dumps(
+                clear[key], sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False,
+            ) == json.dumps(
+                sealed[key], sort_keys=True, separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            if not same_json:
                 unbound.append(key)
     unbound = sorted(set(unbound))
     if unbound:
