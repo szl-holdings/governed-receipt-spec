@@ -10,6 +10,8 @@ or:
     python tests/test_verify.py
 """
 
+import base64
+import hashlib
 import json
 import os
 import sys
@@ -111,7 +113,29 @@ class ValidExamplesPass(unittest.TestCase):
         records[0]["payload"]["dsse"] = {"payloadType": "application/json"}
         ok, lines = verify.verify_records(records, SCHEMA)
         self.assertFalse(ok)
-        self.assertTrue(any("ambiguous sibling" in line for line in lines), "\n".join(lines))
+        self.assertTrue(any("ambiguous envelope" in line for line in lines), "\n".join(lines))
+
+    def test_rejects_envelopes_across_wrapper_levels(self):
+        path = os.path.join(EXAMPLES, "a11oy-khipu-chain.json")
+        with open(path, "r", encoding="utf-8") as receipts:
+            records = json.load(receipts)
+        records[0]["envelope"] = dict(records[0]["payload"]["envelope"])
+        ok, lines = verify.verify_records(records, SCHEMA)
+        self.assertFalse(ok)
+        self.assertTrue(any("ambiguous envelope" in line for line in lines), "\n".join(lines))
+
+    def test_flat_envelope_accepts_opaque_payload(self):
+        body = b"opaque receipt bytes"
+        envelope = {
+            "payloadType": "application/octet-stream",
+            "payload": base64.b64encode(body).decode("ascii"),
+            "payloadSha256": hashlib.sha256(body).hexdigest(),
+            "signed": False,
+            "signatures": [],
+        }
+        ok, lines = verify.verify_records([envelope], SCHEMA)
+        self.assertTrue(ok, "\n".join(lines))
+        self.assertTrue(any("payloadSha256 verified" in line for line in lines))
 
     def test_readiness_audit_receipt_passes(self):
         ok, lines = _verify(os.path.join(EXAMPLES, "readiness-audit-receipt.json"))

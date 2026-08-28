@@ -374,27 +374,36 @@ def check_clear_claim_binding(record, envelope, schema):
             unknown_envelope_fields
         )
 
+    if record is envelope:
+        return True, "flat envelope contains no external clear claims (n/a)"
+
+    payload = record.get("payload")
+    envelope_locations = []
+    for wrapper_name, wrapper in (("record", record), ("payload", payload)):
+        if not isinstance(wrapper, dict):
+            continue
+        for key in ("envelope", "dsse"):
+            if key in wrapper:
+                envelope_locations.append("%s.%s" % (wrapper_name, key))
+    if len(envelope_locations) != 1:
+        return False, "UNBOUND ambiguous envelope locations: %s" % ", ".join(
+            envelope_locations or ["none"]
+        )
+
     sealed, error = _decode_envelope_payload(envelope)
     if not isinstance(sealed, dict):
         return False, "cannot bind clear claims: %s" % (
             error or "sealed payload is not an object"
         )
 
-    payload = record.get("payload")
     layers = []
     if isinstance(payload, dict) and (
         payload.get("envelope") is envelope or payload.get("dsse") is envelope
     ):
-        if "envelope" in payload and "dsse" in payload:
-            return False, "UNBOUND ambiguous sibling envelope and dsse fields"
         layers.append((payload, {"envelope", "dsse"}))
         layers.append((record, {"payload"}))
     elif record.get("envelope") is envelope or record.get("dsse") is envelope:
-        if "envelope" in record and "dsse" in record:
-            return False, "UNBOUND ambiguous sibling envelope and dsse fields"
         layers.append((record, {"envelope", "dsse"}))
-    elif record is envelope:
-        return True, "flat envelope contains no external clear claims (n/a)"
     else:
         return True, "no clear/envelope claim boundary (n/a)"
 
