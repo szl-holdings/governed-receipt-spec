@@ -326,18 +326,18 @@ def check_dsse_structure(envelope):
     if signed is True:
         if not sigs:
             problems.append("signed=true but signatures is empty")
-        for i, s in enumerate(sigs):
-            if not isinstance(s, dict) or "sig" not in s:
-                problems.append("signature[%d] missing 'sig'" % i)
-                continue
-            sig = s["sig"]
-            if not isinstance(sig, str) or not sig:
-                problems.append("signature[%d] 'sig' missing/empty" % i)
-                continue
-            try:
-                base64.b64decode(sig, validate=True)
-            except Exception:  # noqa: BLE001
-                problems.append("signature[%d] 'sig' not strict base64" % i)
+    for i, s in enumerate(sigs):
+        if not isinstance(s, dict) or "sig" not in s:
+            problems.append("signature[%d] missing 'sig'" % i)
+            continue
+        sig = s["sig"]
+        if not isinstance(sig, str) or not sig:
+            problems.append("signature[%d] 'sig' missing/empty" % i)
+            continue
+        try:
+            base64.b64decode(sig, validate=True)
+        except Exception:  # noqa: BLE001
+            problems.append("signature[%d] 'sig' not strict base64" % i)
     if problems:
         return False, "; ".join(problems)
     kind = "signed" if signed else "unsigned"

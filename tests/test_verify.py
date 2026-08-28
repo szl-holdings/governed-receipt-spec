@@ -120,6 +120,17 @@ class FailClosedInputTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("not strict base64", message)
 
+    def test_signature_requires_strict_base64_without_signed_marker(self):
+        envelope = {
+            "payloadType": "application/json",
+            "payload": "e30=",
+            "payloadSha256": "0" * 64,
+            "signatures": [{"sig": "!!!!"}],
+        }
+        ok, message = verify.check_dsse_structure(envelope)
+        self.assertFalse(ok)
+        self.assertIn("not strict base64", message)
+
 class SchemaUnitTests(unittest.TestCase):
     def _minimal(self):
         return {
