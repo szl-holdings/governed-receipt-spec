@@ -395,5 +395,220 @@ class SchemaUnitTests(unittest.TestCase):
         self.assertIn(str(len(body)).encode("ascii"), pae)
 
 
+class DssePaeRuleTests(unittest.TestCase):
+    """The spec-pinned PAE encoding: decimal lengths over DECODED payload bytes."""
+
+    def test_dsse_spec_worked_vector(self):
+        # The worked example from the DSSE v1 protocol specification.
+        self.assertEqual(
+            verify.dsse_pae("http://example.com/HelloWorld", b"hello world"),
+            b"DSSEv1 29 http://example.com/HelloWorld 11 hello world",
+        )
+
+    def test_pae_rejects_non_bytes_payload(self):
+        with self.assertRaises(TypeError):
+            verify.dsse_pae("application/json", "not-bytes")
+
+    def test_pae_rejects_empty_payload_type(self):
+        with self.assertRaises(ValueError):
+            verify.dsse_pae("", b"body")
+
+
+class SignatureVerificationTests(unittest.TestCase):
+    """ECDSA P-256 signature verification over the decoded-bytes PAE."""
+
+    @staticmethod
+    def _cosign_pub():
+        with open(os.path.join(FIXTURES, "cosign.pub"), "rb") as fh:
+            return fh.read()
+
+    def _signed_envelope(self):
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pub_pem = priv.public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        payload = b'{"k":"v","n":3600}'
+        ptype = "application/vnd.in-toto+json"
+        sig = priv.sign(verify.dsse_pae(ptype, payload), ec.ECDSA(hashes.SHA256()))
+        envelope = {
+            "payloadType": ptype,
+            "payload": base64.b64encode(payload).decode("ascii"),
+            "signatures": [
+                {"keyid": "test", "sig": base64.b64encode(sig).decode("ascii")}
+            ],
+        }
+        return envelope, priv, pub_pem, payload
+
+    def test_pae_length_is_over_decoded_payload_bytes(self):
+        envelope, _, pub_pem, payload = self._signed_envelope()
+        # base64 text is strictly longer than the decoded payload, so the two
+        # length fields can never coincide — a LEN over the base64 text would
+        # be a signature-verify bypass.
+        self.assertNotEqual(len(envelope["payload"]), len(payload))
+        ok, msg = verify.check_signatures(envelope, pub_pem)
+        self.assertTrue(ok, msg)
+        self.assertIn("1 signature(s) verified", msg)
+
+    def test_signature_over_base64_text_pae_fails(self):
+        # Sign a PAE whose LEN covers the base64 TEXT (the bypass class):
+        # the verifier must reject it because it recomputes over decoded bytes.
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        priv = ec.generate_private_key(ec.SECP256R1())
+        pub_pem = priv.public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        payload = b'{"k":"v"}'
+        ptype = "application/vnd.in-toto+json"
+        b64 = base64.b64encode(payload).decode("ascii")
+        bad_sig = priv.sign(
+            verify.dsse_pae(ptype, b64.encode("ascii")), ec.ECDSA(hashes.SHA256())
+        )
+        envelope = {
+            "payloadType": ptype,
+            "payload": b64,
+            "signatures": [{"keyid": "x", "sig": base64.b64encode(bad_sig).decode("ascii")}],
+        }
+        ok, msg = verify.check_signatures(envelope, pub_pem)
+        self.assertFalse(ok)
+        self.assertIn("mismatch", msg)
+
+    def test_shipped_chain_signatures_verify_with_vendored_key(self):
+        ok, lines = verify.verify_file(
+            os.path.join(EXAMPLES, "a11oy-khipu-chain.json"),
+            SCHEMA,
+            self._cosign_pub(),
+        )
+        self.assertTrue(ok, "\n".join(lines))
+        verified = [ln for ln in lines if "signature(s) verified" in ln]
+        self.assertEqual(len(verified), 5, "\n".join(lines))
+
+    def test_wrong_key_fails(self):
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        wrong = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        ok, lines = verify.verify_file(
+            os.path.join(EXAMPLES, "a11oy-khipu-chain.json"), SCHEMA, wrong
+        )
+        self.assertFalse(ok)
+        self.assertTrue(any("signature[0] mismatch" in ln for ln in lines))
+
+    def test_tampered_signature_fails(self):
+        with open(os.path.join(EXAMPLES, "a11oy-khipu-chain.json"), "r",
+                  encoding="utf-8") as fh:
+            records = json.load(fh)
+        raw = bytearray(
+            base64.b64decode(records[0]["payload"]["envelope"]["signatures"][0]["sig"])
+        )
+        raw[-1] ^= 0x01
+        records[0]["payload"]["envelope"]["signatures"][0]["sig"] = (
+            base64.b64encode(bytes(raw)).decode("ascii")
+        )
+        ok, lines = verify.verify_records(records, SCHEMA, self._cosign_pub())
+        self.assertFalse(ok)
+        self.assertTrue(any("signature[0]" in ln and "FAIL" in ln for ln in lines),
+                        "\n".join(lines))
+
+    def test_no_key_reports_skip_never_pass(self):
+        ok, lines = _verify(os.path.join(EXAMPLES, "a11oy-khipu-chain.json"))
+        self.assertTrue(ok, "\n".join(lines))
+        skips = [ln for ln in lines if "sig:" in ln and "SKIP" in ln]
+        self.assertEqual(len(skips), 5, "\n".join(lines))
+        self.assertFalse(any("signature(s) verified" in ln for ln in skips))
+
+    def test_non_p256_verify_key_fails(self):
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+
+        p384 = ec.generate_private_key(ec.SECP384R1()).public_key().public_bytes(
+            serialization.Encoding.PEM,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        ok, msg = verify.check_signatures(
+            {"payloadType": "application/json",
+             "payload": base64.b64encode(b"{}").decode("ascii"),
+             "signatures": [{"sig": base64.b64encode(b"x").decode("ascii")}]},
+            p384,
+        )
+        self.assertFalse(ok)
+        self.assertIn("not an ECDSA P-256 public key", msg)
+
+
+class IntotoStatementTests(unittest.TestCase):
+    """ITE-6 structural validation via the pinned in-toto-attestation bindings."""
+
+    @staticmethod
+    def _statement_envelope(statement):
+        body = json.dumps(
+            statement, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+        return {
+            "payloadType": "application/vnd.in-toto+json",
+            "payload": base64.b64encode(body).decode("ascii"),
+            "signatures": [],
+        }
+
+    def _valid_statement(self):
+        return {
+            "_type": "https://in-toto.io/Statement/v1",
+            "subject": [{"name": "release-42", "digest": {"sha256": "ab" * 32}}],
+            "predicateType": "https://szl.dev/GovernedAction/v1",
+            "predicate": {"kind": "probe"},
+        }
+
+    def test_valid_statement_passes(self):
+        ok, msg = verify.check_intoto_statement(
+            self._statement_envelope(self._valid_statement())
+        )
+        self.assertTrue(ok, msg)
+        self.assertIn("in-toto-attestation 0.9.3", msg)
+
+    def test_statement_head_matches_locked_demo_format(self):
+        # v11 §7.5: b'DSSEv1 28 application/vnd.in-toto+json <len> {"_type":"https://in'
+        statement = self._valid_statement()
+        body = json.dumps(
+            statement, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        ).encode("utf-8")
+        preimage = verify.dsse_pae("application/vnd.in-toto+json", body)
+        self.assertRegex(
+            preimage,
+            rb'^DSSEv1 28 application/vnd\.in-toto\+json \d+ \{"_type":"https://in',
+        )
+
+    def test_subject_without_digest_fails(self):
+        statement = self._valid_statement()
+        statement["subject"] = [{"name": "release-42", "digest": {}}]
+        ok, msg = verify.check_intoto_statement(self._statement_envelope(statement))
+        self.assertFalse(ok)
+        self.assertIn("statement-ite6-invalid", msg)
+
+    def test_empty_predicate_fails(self):
+        statement = self._valid_statement()
+        statement["predicate"] = {}
+        ok, msg = verify.check_intoto_statement(self._statement_envelope(statement))
+        self.assertFalse(ok)
+        self.assertIn("statement-ite6-invalid", msg)
+
+    def test_non_intoto_payload_is_na(self):
+        envelope = {
+            "payloadType": "application/vnd.szl.khipu+json",
+            "payload": base64.b64encode(b'{"k":"v"}').decode("ascii"),
+            "signatures": [],
+        }
+        ok, msg = verify.check_intoto_statement(envelope)
+        self.assertTrue(ok)
+        self.assertIn("n/a", msg)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
