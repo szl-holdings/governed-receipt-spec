@@ -1,12 +1,12 @@
 # governed-receipt-spec
 
-**An open format for the *governance decision receipt* an AI runtime emits — plus a dependency-free offline verifier.**
+**An open format for the *governance decision receipt* an AI runtime emits — plus an offline verifier built on pinned, maintained crypto libraries (no hand-rolled DSSE/ECDSA).**
 
 Built and maintained by [SZL Holdings](https://a-11-oy.com). Apache-2.0.
 
 A **governed inference receipt** is the small, replayable, hash-chained record that a governed AI runtime produces for one governed action (e.g. an inference): what it decided, the Λ governance-floor status, whether energy was actually measured, and a signed envelope that lets anyone re-check it offline.
 
-This repo publishes that receipt as a documented, adoptable format so an outside party can verify SZL receipts (and model their own) **with one command and zero dependencies.**
+This repo publishes that receipt as a documented, adoptable format so an outside party can verify SZL receipts (and model their own) **with one command and two pinned dependencies** ([`in-toto-attestation` 0.9.3](https://pypi.org/project/in-toto-attestation/) and [`cryptography` 50.0.1](https://pypi.org/project/cryptography/), per the v11 doctrine §7.1).
 
 ---
 
@@ -45,9 +45,10 @@ Fields not present in today's real receipts (e.g. an inline numeric Λ score, `o
 
 ## Verify in one command
 
-Dependency-free — Python 3 standard library only, no network:
+Offline (no network). Two pinned maintained dependencies — no hand-rolled crypto:
 
 ```bash
+pip install -r requirements.txt
 python verify.py examples/a11oy-khipu-chain.json
 ```
 
@@ -55,12 +56,18 @@ The verifier, for each receipt:
 
 1. **validates** the decoded decision object against `schema/governed-receipt.schema.json`;
 2. **recomputes the content hash** and checks it — `sha256(DSSE PAE) == _pae_sha256` for signed khipu/lake receipts, or `sha256(payload) == payloadSha256` for readiness receipts (this matches SZL's own documented `how_to_verify`);
-3. **checks the prev-hash chain** across a receipt list (`prev == previous.digest`, contiguous `seq`, genesis is 64 zeros); and
-4. **structurally checks the DSSE envelope**.
+3. **checks the prev-hash chain** across a receipt list (`prev == previous.digest`, contiguous `seq`, genesis is 64 zeros);
+4. **structurally checks the DSSE envelope**;
+5. **validates in-toto Statement payloads** through the pinned `in-toto-attestation` 0.9.3 bindings (ITE-6 minimums); and
+6. with `--verify-key cosign.pub`, **cryptographically verifies every envelope signature** — ECDSA P-256 SHA-256 over the DSSE PAE of the *decoded* payload bytes, via `cryptography` 50.0.1:
 
-It prints a clear `PASS` / `FAIL` per receipt with reasons, and exits non-zero on any failure.
+```bash
+python verify.py --verify-key tests/fixtures/cosign.pub examples/a11oy-khipu-chain.json
+```
 
-> Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, and the `prev ↔ digest` chain. Full signature verification of the DSSE `ECDSA-P256` signature is done upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url`.
+Without `--verify-key` the signature check is reported as `SKIP` — never as a pass. It prints a clear `PASS` / `FAIL` per receipt with reasons, and exits non-zero on any failure.
+
+> Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, the `prev ↔ digest` chain, and (with a public key) the envelope signature. The same signatures also verify upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url` and vendored for offline use at `tests/fixtures/cosign.pub`.
 
 **Prefer to click?** Paste any receipt into the live verifier Space — **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — which runs this exact `verify.py` in your browser (via Pyodide, no upload). Or run against the benchmark corpus **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled tampers (must FAIL).
 

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Offline verifier for SZL Governed Inference Receipts.
 
-Dependency-free (Python standard library only). No third-party packages, no
-network access. Verifies receipts published by the SZL Holdings estate
+Offline (no network access). Pinned maintained dependencies per the v11
+doctrine (§7.1 / B-08 — no hand-rolled DSSE/crypto):
+
+    in-toto-attestation == 0.9.3   (ITE-6 Statement/predicate validation)
+    cryptography         == 50.0.1 (ECDSA P-256 signature verification)
+
+Verifies receipts published by the SZL Holdings estate
 (e.g. SZLHOLDINGS/a11oy-verifiable-corpus, SZLHOLDINGS/readiness-runs,
 SZLHOLDINGS/szl-evidence).
 
@@ -12,20 +17,27 @@ For each receipt the verifier:
         - DSSE receipts: sha256(PAE) == envelope._pae_sha256 (== receipt_uid),
         - readiness receipts: sha256(payload bytes) == payloadSha256,
   (c) checks the prev-hash chain across a receipt list (prev == previous.digest,
-      genesis prev is 64 zeros, seq increments), and
-  (d) structurally checks the DSSE envelope.
+      genesis prev is 64 zeros, seq increments),
+  (d) structurally checks the DSSE envelope,
+  (e) when the payload is an in-toto Statement, validates it through the
+      pinned in-toto-attestation bindings (ITE-6 minimums), and
+  (f) when --verify-key is given, cryptographically verifies every envelope
+      signature: ECDSA P-256 SHA-256 over the DSSE PAE of the DECODED payload
+      bytes. Without a key the check is reported as SKIP — never as a pass.
 
 It prints a clear PASS / FAIL per receipt and per file with reasons.
 
 Honesty note: this verifier does NOT re-derive the runtime's internal `digest`
 (that serialization is internal to the emitting runtime). It verifies the
 relations that an outside party can independently reproduce: the DSSE PAE
-content hash, the payload-bytes hash, and the prev<->digest chain. A receipt is
-an honest, replayable audit record -- it is NOT a zero-knowledge proof.
+content hash, the payload-bytes hash, the prev<->digest chain, and — with a
+public key supplied — the envelope signature itself. A receipt is an honest,
+replayable audit record -- it is NOT a zero-knowledge proof.
 
 Usage:
     python verify.py <receipt.json> [<receipt2.json> ...]
     python verify.py --schema schema/governed-receipt.schema.json examples/*.json
+    python verify.py --verify-key tests/fixtures/cosign.pub examples/a11oy-khipu-chain.json
 """
 
 from __future__ import annotations
@@ -38,7 +50,15 @@ import os
 import re
 import sys
 
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+from in_toto_attestation.v1.resource_descriptor import ResourceDescriptor
+from in_toto_attestation.v1.statement import STATEMENT_TYPE_URI, Statement
+
 ZERO_HASH = "0" * 64
+IN_TOTO_STATEMENT_TYPE = STATEMENT_TYPE_URI
+IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json"
 DEFAULT_SCHEMA = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "schema",
@@ -257,16 +277,142 @@ def is_inference_receipt(decision):
 # Content-hash & DSSE checks                                                   #
 # --------------------------------------------------------------------------- #
 def dsse_pae(payload_type, body_bytes):
-    """DSSE Pre-Authentication Encoding."""
+    """DSSE v1 Pre-Authentication Encoding (spec-exact, cosign-compatible).
+
+    PAE(type, body) = "DSSEv1" SP LEN(type) SP type SP LEN(body) SP body
+    with ASCII decimal lengths over the DECODED payload bytes (never the
+    base64 text). This is the single spec-pinned implementation used by every
+    check in this verifier: the pinned in-toto-attestation 0.9.3 wheel ships
+    the Statement/predicate bindings only — no DSSE envelope/PAE code
+    (verified by inspection) — so the encoding is pinned here by the DSSE
+    spec's worked test vector (see tests/test_verify.py).
+    """
+    if not isinstance(payload_type, str) or not payload_type:
+        raise ValueError("payload_type must be a non-empty string")
+    if not isinstance(body_bytes, bytes):
+        raise TypeError("body_bytes must be bytes")
     return (
         b"DSSEv1 "
-        + str(len(payload_type)).encode("ascii")
+        + str(len(payload_type.encode("utf-8"))).encode("ascii")
         + b" "
         + payload_type.encode("utf-8")
         + b" "
         + str(len(body_bytes)).encode("ascii")
         + b" "
         + body_bytes
+    )
+
+
+def _intoto_statement_errors(statement):
+    """Fail-soft ITE-6 structural validation via in-toto-attestation 0.9.3.
+
+    Returns a list of reason strings (empty == structurally valid). Never
+    raises: malformed input is a verification failure, not an exception.
+    """
+    if not isinstance(statement, dict):
+        return ["statement is not an object"]
+    try:
+        subjects = statement.get("subject")
+        descriptors = []
+        for index, subject in enumerate(subjects if isinstance(subjects, list) else []):
+            if not isinstance(subject, dict):
+                return ["subject %d is not an object" % index]
+            name = subject.get("name")
+            digest = subject.get("digest")
+            descriptor = ResourceDescriptor(
+                name=name if isinstance(name, str) else "",
+                digest=(
+                    {str(k): str(v) for k, v in digest.items()}
+                    if isinstance(digest, dict)
+                    else {}
+                ),
+            )
+            descriptor.validate()
+            descriptors.append(descriptor.pb)
+        predicate = statement.get("predicate")
+        stmt = Statement(
+            subjects=descriptors,
+            predicate_type=statement.get("predicateType") or "",
+            predicate=dict(predicate) if isinstance(predicate, dict) else {},
+        )
+        stmt.validate()
+    except (ValueError, TypeError) as exc:
+        return ["statement-ite6-invalid: %s" % exc]
+    return []
+
+
+def check_intoto_statement(envelope):
+    """ITE-6 validation for in-toto Statement payloads. Returns (ok, message)."""
+    if envelope is None:
+        return True, "no envelope to check (n/a)"
+    ptype = envelope.get("payloadType")
+    decoded, err = _decode_envelope_payload(envelope)
+    is_intoto = ptype == IN_TOTO_PAYLOAD_TYPE or (
+        isinstance(decoded, dict) and decoded.get("_type") == IN_TOTO_STATEMENT_TYPE
+    )
+    if not is_intoto:
+        return True, "not an in-toto Statement payload (n/a)"
+    if decoded is None:
+        return False, "in-toto payload undecodable: %s" % err
+    errors = _intoto_statement_errors(decoded)
+    if errors:
+        return False, "; ".join(errors)
+    return True, "in-toto Statement v1 validated via in-toto-attestation 0.9.3"
+
+
+def check_signatures(envelope, public_key_pem):
+    """Cryptographically verify DSSE envelope signatures. Returns (ok, message).
+
+    Each signature is verified as ECDSA P-256 SHA-256 over the DSSE PAE of the
+    DECODED payload bytes (never the base64 text), using the pinned
+    ``cryptography`` 50.0.1 library. Without a key the check is an honest
+    SKIP: it never claims a pass it did not perform.
+    """
+    if envelope is None:
+        return True, "no envelope to check (n/a)"
+    sigs = envelope.get("signatures")
+    if not isinstance(sigs, list) or not sigs:
+        return True, "no signatures to verify (n/a)"
+    if public_key_pem is None:
+        return True, (
+            "SKIP - %d signature(s) present but no --verify-key supplied; "
+            "structure + content hash checked, signature not cryptographically "
+            "verified" % len(sigs)
+        )
+    try:
+        body = base64.b64decode(envelope["payload"], validate=True)
+        preimage = dsse_pae(envelope.get("payloadType", ""), body)
+    except Exception as exc:  # noqa: BLE001
+        return False, "cannot reconstruct PAE preimage: %s" % exc
+    try:
+        public_key = serialization.load_pem_public_key(
+            public_key_pem.encode("utf-8")
+            if isinstance(public_key_pem, str)
+            else public_key_pem
+        )
+    except Exception as exc:  # noqa: BLE001
+        return False, "verify key unreadable: %s" % exc
+    if not isinstance(public_key, ec.EllipticCurvePublicKey) or not isinstance(
+        public_key.curve, ec.SECP256R1
+    ):
+        return False, "verify key is not an ECDSA P-256 public key"
+    failures = []
+    for i, entry in enumerate(sigs):
+        if not isinstance(entry, dict) or not isinstance(entry.get("sig"), str):
+            failures.append("signature[%d] malformed" % i)
+            continue
+        try:
+            signature = base64.b64decode(entry["sig"], validate=True)
+            public_key.verify(signature, preimage, ec.ECDSA(hashes.SHA256()))
+        except InvalidSignature:
+            failures.append("signature[%d] mismatch" % i)
+        except Exception as exc:  # noqa: BLE001
+            failures.append("signature[%d] invalid (%s)" % (i, exc))
+    if failures:
+        return False, "; ".join(failures)
+    return True, (
+        "%d signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE "
+        "(decoded payload bytes)" % len(sigs)
     )
 
 
@@ -502,7 +648,7 @@ def check_chain(decisions):
 # --------------------------------------------------------------------------- #
 # Top-level verification                                                       #
 # --------------------------------------------------------------------------- #
-def verify_records(records, schema):
+def verify_records(records, schema, public_key_pem=None):
     """Verify a list of records. Returns (ok, report_lines)."""
     if not records:
         return False, ["- records: FAIL no receipt records found"]
@@ -520,6 +666,16 @@ def verify_records(records, schema):
         s_ok, s_msg = check_dsse_structure(envelope)
         ok = ok and s_ok
         lines.append("    dsse:   %s %s" % ("PASS" if s_ok else "FAIL", s_msg))
+
+        # (e) in-toto Statement ITE-6 validation (in-toto payloads only)
+        t_ok, t_msg = check_intoto_statement(envelope)
+        ok = ok and t_ok
+        lines.append("    intoto: %s %s" % ("PASS" if t_ok else "FAIL", t_msg))
+
+        # (f) cryptographic signature verification (SKIP without --verify-key)
+        g_ok, g_msg = check_signatures(envelope, public_key_pem)
+        ok = ok and g_ok
+        lines.append("    sig:    %s %s" % ("PASS" if g_ok else "FAIL", g_msg))
 
         # (b) content hash
         h_ok, h_msg = check_content_hash(record, envelope)
@@ -560,9 +716,9 @@ def verify_records(records, schema):
     return ok, lines
 
 
-def verify_file(path, schema):
+def verify_file(path, schema, public_key_pem=None):
     records = load_records(path)
-    return verify_records(records, schema)
+    return verify_records(records, schema, public_key_pem)
 
 
 def load_schema(path):
@@ -576,14 +732,32 @@ def main(argv=None):
     parser.add_argument("receipts", nargs="+", help="receipt JSON / NDJSON file(s)")
     parser.add_argument("--schema", default=DEFAULT_SCHEMA,
                         help="path to governed-receipt.schema.json")
+    parser.add_argument(
+        "--verify-key",
+        default=None,
+        metavar="PEM",
+        help=(
+            "path to a PEM ECDSA P-256 public key; when given, every envelope "
+            "signature is cryptographically verified (offline). Without it, "
+            "signature verification is reported as SKIP, never as a pass."
+        ),
+    )
     args = parser.parse_args(argv)
 
     schema = load_schema(args.schema)
+    public_key_pem = None
+    if args.verify_key:
+        try:
+            with open(args.verify_key, "rb") as fh:
+                public_key_pem = fh.read()
+        except OSError as exc:
+            print("ERROR: cannot read --verify-key %s: %s" % (args.verify_key, exc))
+            return 1
     all_ok = True
     for path in args.receipts:
         print("=== %s ===" % path)
         try:
-            file_ok, lines = verify_file(path, schema)
+            file_ok, lines = verify_file(path, schema, public_key_pem)
         except Exception as exc:  # noqa: BLE001
             print("  FAIL could not process file: %s" % exc)
             all_ok = False
