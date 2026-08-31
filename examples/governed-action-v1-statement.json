@@ -1,0 +1,69 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicateType": "https://szl.dev/GovernedAction/v1",
+  "subject": [
+    {
+      "name": "deploy-2026-08-31-0001",
+      "digest": {
+        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    }
+  ],
+  "predicate": {
+    "action": {
+      "type": "estate.audit.example",
+      "description": "Reference conformant GovernedAction/v1 statement (synthetic example, not a real event)",
+      "target": "szl-holdings/a11oy@main",
+      "idempotency_key": "deploy-2026-08-31-0001"
+    },
+    "principal": {
+      "type": "human",
+      "id": "stephen.lutar",
+      "is_service_account": false,
+      "auth_method": "hardware_key"
+    },
+    "authority": {
+      "outcome": "ALLOW",
+      "evaluated_before_execution": true,
+      "policy_ref": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "human_approval": {
+        "approver_id": "stephen.lutar",
+        "approved_at": "2026-08-31T19:59:00Z",
+        "approval_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    "side_effect_class": "READ_ONLY",
+    "evidence": {
+      "obligations": [
+        {
+          "id": "tests_green",
+          "satisfied": true,
+          "artifact_digests": [
+            "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+          ]
+        },
+        {
+          "id": "review_recorded",
+          "satisfied": true,
+          "artifact_digests": [
+            "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          ]
+        }
+      ],
+      "completeness": "COMPLETE"
+    },
+    "timestamp": {
+      "utc": "2026-08-31T19:59:30Z",
+      "ntp_synced": true,
+      "rfc3161_token": "MEYCIQDT...base64-token..."
+    },
+    "context": {
+      "source_revision": "abc123",
+      "deployment_revision": "abc123"
+    },
+    "limitations": [
+      "Does not prove the model output is correct \u2014 only that governance ran.",
+      "Synthetic example shipped with the spec; not a record of a real governed action."
+    ]
+  }
+}
