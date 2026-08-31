@@ -48,7 +48,6 @@ import hashlib
 import json
 import os
 import re
-import sys
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
