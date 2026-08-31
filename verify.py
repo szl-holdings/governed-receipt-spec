@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline verifier for SZL Governed Inference Receipts.
+"""Offline verifier for SZL Governed Agent Change Management Receipts.
 
 Offline (no network access). Pinned maintained dependencies per the v11
 doctrine (§7.1 / B-08 — no hand-rolled DSSE/crypto):
@@ -728,7 +728,7 @@ def load_schema(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="Offline verifier for SZL Governed Inference Receipts.")
+        description="Offline verifier for SZL Governed Agent Change Management Receipts.")
     parser.add_argument("receipts", nargs="+", help="receipt JSON / NDJSON file(s)")
     parser.add_argument("--schema", default=DEFAULT_SCHEMA,
                         help="path to governed-receipt.schema.json")
