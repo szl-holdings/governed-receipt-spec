@@ -1,0 +1,81 @@
+# Article 12 logging conformance profile for GovernedAction/v1
+# Machine-readable. This is a LOGGING CONFORMANCE PROFILE, not a claim of
+# "EU AI Act compliance". Applicability, risk classification, and deployer
+# obligations are customer-specific and out of scope for this document.
+profile: eu-ai-act-article12-logging
+profile_version: 1
+predicate: https://szl.dev/GovernedAction/v1
+generated: 2026-08-31
+honesty_boundary: >
+  PASS means the field is structurally present and validated by
+  governed_action.py. INCOMPLETE means the field exists but its evidence
+  obligation is unsatisfied. UNKNOWN means the requirement cannot be
+  evaluated from the record alone. A field NEVER silently passes.
+
+retention:
+  minimum_days: 180        # six-month statutory floor
+  recommended_days: 2555   # seven years, matching enterprise audit practice
+  note: >
+    Retention is a deployment property, not a schema property. This floor is
+    asserted by the profile; an operator MUST bind retention to a storage
+    policy receipt for the claim to be COMPLETE.
+
+fields:
+  - article: "12(1) — record-keeping capability"
+    requirement: High-risk system automatically records events (logs) over its lifetime
+    jsonpath: "$.predicate"
+    validator: validate_statement
+    state: PASS
+    note: The predicate IS the per-event record; envelope signature binds it.
+
+  - article: "12(2)(a) — period of use"
+    requirement: Recording of the period of each use (start/end timestamp)
+    jsonpath: "$.predicate.timestamp.utc"
+    validator: TestBackdating
+    state: PASS
+    note: End timestamp is carried by the next chained receipt (prev-link); single-receipt consumers see start only.
+
+  - article: "12(2)(b) — reference database"
+    requirement: Reference database against which input data was checked
+    jsonpath: "$.predicate.authority.policy_ref"
+    validator: validate_predicate
+    state: PASS
+    note: Policy digest pins the exact ruleset evaluated before execution.
+
+  - article: "12(2)(c) — input data leading to a match"
+    requirement: Input data for which the search led to a match
+    jsonpath: "$.predicate.evidence.obligations[].artifact_digests"
+    validator: TestEvidenceCompleteness
+    state: INCOMPLETE
+    note: Digests are recorded; the referenced artifacts themselves live in the evidence store. Full conformance requires the store receipt to be resolvable.
+
+  - article: "12(3)(d) — natural persons involved in verification"
+    requirement: Identification of natural persons involved in verifying results
+    jsonpath: "$.predicate.principal"
+    validator: TestServiceAccountSpoofing
+    state: PASS
+    note: >
+      principal.is_service_account is const false in the human-principal
+      profile and auth_method=api_key is rejected as a spoof. This is the
+      field most runtime logs omit entirely.
+
+  - article: "12(3) — human oversight interface"
+    requirement: Logs enable identification of where human intervention occurred
+    jsonpath: "$.predicate.authority.human_approval"
+    validator: TestAuthorityAndSideEffects
+    state: PASS
+    note: REQUIRED for IRREVERSIBLE / EXTERNALLY_VISIBLE side effects with outcome ALLOW.
+
+  - article: "12(4) — tamper protection"
+    requirement: Logs protected against tampering and unauthorized access
+    jsonpath: "envelope signatures + prev-hash chain"
+    validator: verify.py
+    state: PASS
+    note: ECDSA P-256 over DSSE PAE, verified offline by verify.py in this repo.
+
+overall_state: INCOMPLETE
+overall_note: >
+  One field (12(2)(c) artifact resolution) is INCOMPLETE by design until the
+  evidence store is bound. Per the Zero-Bandaid Law the profile therefore
+  reports INCOMPLETE overall. A vendor profile reporting blanket PASS without
+  an evidence store is the failure mode this profile exists to expose.
