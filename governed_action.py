@@ -48,7 +48,7 @@ HUMAN_AUTH_METHODS = ("hardware_key", "oidc_interactive", "sso_mfa")
 AUTH_METHODS = HUMAN_AUTH_METHODS + ("api_key",)
 VERDICTS = ("PASS", "INCOMPLETE", "FAIL", "UNSIGNED")
 
-_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
 @dataclass
@@ -163,7 +163,34 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
         if not isinstance(obligations, list) or not obligations:
             v.fail("evidence.obligations must be a non-empty list")
             obligations = []
-        unsatisfied = [o.get("id", "?") for o in obligations if isinstance(o, dict) and o.get("satisfied") is not True]
+        unsatisfied = []
+        for index, obligation in enumerate(obligations):
+            if not isinstance(obligation, dict):
+                v.fail(f"evidence.obligations[{index}] must be an object")
+                continue
+
+            obligation_id = obligation.get("id")
+            if not isinstance(obligation_id, str):
+                v.fail(f"evidence.obligations[{index}].id must be a string")
+                obligation_id = f"index {index}"
+
+            satisfied = obligation.get("satisfied")
+            if not isinstance(satisfied, bool):
+                v.fail(f"evidence.obligations[{index}].satisfied must be a boolean")
+            elif not satisfied:
+                unsatisfied.append(obligation_id)
+
+            digests = obligation.get("artifact_digests", [])
+            if not isinstance(digests, list):
+                v.fail(f"evidence.obligations[{index}].artifact_digests must be a list")
+                continue
+            for digest_index, digest in enumerate(digests):
+                if not isinstance(digest, str) or not _SHA256.fullmatch(digest):
+                    v.fail(
+                        f"evidence.obligations[{index}].artifact_digests[{digest_index}] "
+                        "must be a lowercase sha256 digest"
+                    )
+
         completeness = evidence.get("completeness")
         if unsatisfied:
             v.incomplete(f"evidence obligations unsatisfied: {', '.join(map(str, unsatisfied))}")
@@ -171,11 +198,6 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
                 v.fail("evidence.completeness claims COMPLETE while obligations are unsatisfied — derived state must never be asserted")
         elif completeness != "COMPLETE":
             v.incomplete("evidence.completeness is not COMPLETE")
-        for o in obligations:
-            if isinstance(o, dict):
-                for d in o.get("artifact_digests", []) or []:
-                    if not isinstance(d, str) or not _SHA256.match(d):
-                        v.fail(f"obligation {o.get('id', '?')} carries a non-sha256 artifact digest")
 
     # --- timestamp (anti-backdating) ---
     ts = p.get("timestamp")
@@ -196,16 +218,39 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
     context = p.get("context")
     if context is not None and not isinstance(context, dict):
         v.fail("context must be an object when present")
-    if isinstance(context, dict) and context.get("redacted") is True:
+    if isinstance(context, dict):
+        redacted = context.get("redacted")
+        if "redacted" in context and not isinstance(redacted, bool):
+            v.fail("context.redacted must be a boolean")
+
+        commitments_present = "redaction_commitments" in context
         commitments = context.get("redaction_commitments")
-        if not isinstance(commitments, list) or not commitments:
+        if redacted is True and (
+            not commitments_present or (isinstance(commitments, list) and not commitments)
+        ):
             v.fail("context.redacted is true but no redaction_commitments present — redaction could hide exculpatory evidence")
-        else:
-            for c in commitments:
-                if not isinstance(c, dict) or not _SHA256.match(str(c.get("commitment", ""))):
-                    v.fail("redaction_commitment entry malformed")
-                elif not isinstance(c.get("salt"), str) or len(c["salt"]) < 32:
-                    v.fail("redaction_commitment salt too short (<32 hex chars)")
+
+        if commitments_present and not isinstance(commitments, list):
+            v.fail("context.redaction_commitments must be a list")
+        elif isinstance(commitments, list):
+            for index, item in enumerate(commitments):
+                path = f"context.redaction_commitments[{index}]"
+                if not isinstance(item, dict):
+                    v.fail(f"{path} must be an object")
+                    continue
+
+                if not isinstance(item.get("field_path"), str):
+                    v.fail(f"{path}.field_path must be a string")
+
+                salt = item.get("salt")
+                if not isinstance(salt, str):
+                    v.fail(f"{path}.salt must be a string")
+                elif len(salt) < 32:
+                    v.fail(f"{path}.salt must contain at least 32 characters")
+
+                commitment = item.get("commitment")
+                if not isinstance(commitment, str) or not _SHA256.fullmatch(commitment):
+                    v.fail(f"{path}.commitment must be a lowercase sha256 digest")
 
     if v.state == "PASS" and v.reasons:
         v.state = "INCOMPLETE"
