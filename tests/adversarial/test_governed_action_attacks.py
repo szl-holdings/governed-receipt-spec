@@ -20,6 +20,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
 from governed_action import (  # noqa: E402
+    Verdict,
     redaction_commitment,
     validate_predicate,
     validate_statement,
@@ -183,6 +184,22 @@ class TestRedactionCommitments(unittest.TestCase):
         v = validate_predicate(p, now=NOW)
         self.assertEqual(v.state, "FAIL")
 
+    def test_malformed_commitment_is_rejected_without_coercion(self):
+        for malformed in ("c" * 64 + "\n", int("1" * 64)):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["context"]["redacted"] = True
+                p["context"]["redaction_commitments"] = [
+                    {
+                        "field_path": "action.target",
+                        "salt": "f" * 32,
+                        "commitment": malformed,
+                    }
+                ]
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn("redaction_commitment entry malformed", v.reasons)
+
 
 class TestEvidenceCompleteness(unittest.TestCase):
     """Attack: claim PASS while evidence is missing — the core lie the
@@ -214,8 +231,9 @@ class TestEvidenceCompleteness(unittest.TestCase):
                 p = base_predicate()
                 p["evidence"]["obligations"] = [malformed]
                 v = validate_predicate(p, now=NOW)
+                self.assertIsInstance(v, Verdict)
                 self.assertEqual(v.state, "FAIL")
-                self.assertTrue(any("must be an object" in reason for reason in v.reasons))
+                self.assertIn("evidence.obligations[0] must be an object", v.reasons)
 
     def test_obligation_id_must_be_a_string(self):
         for malformed in (None, 42):
@@ -249,8 +267,25 @@ class TestEvidenceCompleteness(unittest.TestCase):
                 p = base_predicate()
                 p["evidence"]["obligations"][0]["artifact_digests"] = malformed
                 v = validate_predicate(p, now=NOW)
+                self.assertIsInstance(v, Verdict)
                 self.assertEqual(v.state, "FAIL")
-                self.assertTrue(any("artifact_digests must be a list" in reason for reason in v.reasons))
+                self.assertIn(
+                    "evidence.obligations[0].artifact_digests must be a list",
+                    v.reasons,
+                )
+
+    def test_artifact_digest_element_failure_uses_stable_indexed_path(self):
+        for malformed in ("not-a-digest", "c" * 64 + "\n"):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["evidence"]["obligations"][0]["artifact_digests"] = [malformed]
+                v = validate_predicate(p, now=NOW)
+                self.assertIsInstance(v, Verdict)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn(
+                    "evidence.obligations[0].artifact_digests[0] must be a lowercase sha256 digest",
+                    v.reasons,
+                )
 
     def test_conformant_evidence_still_passes(self):
         v = validate_predicate(base_predicate(), now=NOW)

@@ -48,7 +48,7 @@ HUMAN_AUTH_METHODS = ("hardware_key", "oidc_interactive", "sso_mfa")
 AUTH_METHODS = HUMAN_AUTH_METHODS + ("api_key",)
 VERDICTS = ("PASS", "INCOMPLETE", "FAIL", "UNSIGNED")
 
-_SHA256 = re.compile(r"^[0-9a-f]{64}$")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 
 
 @dataclass
@@ -182,11 +182,14 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
 
             digests = obligation.get("artifact_digests", [])
             if not isinstance(digests, list):
-                v.fail(f"obligation {obligation_id} artifact_digests must be a list")
+                v.fail(f"evidence.obligations[{index}].artifact_digests must be a list")
                 continue
-            for digest in digests:
-                if not isinstance(digest, str) or not _SHA256.match(digest):
-                    v.fail(f"obligation {obligation_id} carries a non-sha256 artifact digest")
+            for digest_index, digest in enumerate(digests):
+                if not isinstance(digest, str) or not _SHA256.fullmatch(digest):
+                    v.fail(
+                        f"evidence.obligations[{index}].artifact_digests[{digest_index}] "
+                        "must be a lowercase sha256 digest"
+                    )
 
         completeness = evidence.get("completeness")
         if unsatisfied:
@@ -221,7 +224,8 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
             v.fail("context.redacted is true but no redaction_commitments present — redaction could hide exculpatory evidence")
         else:
             for c in commitments:
-                if not isinstance(c, dict) or not _SHA256.match(str(c.get("commitment", ""))):
+                commitment = c.get("commitment") if isinstance(c, dict) else None
+                if not isinstance(commitment, str) or not _SHA256.fullmatch(commitment):
                     v.fail("redaction_commitment entry malformed")
                 elif not isinstance(c.get("salt"), str) or len(c["salt"]) < 32:
                     v.fail("redaction_commitment salt too short (<32 hex chars)")
