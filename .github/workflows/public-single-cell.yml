@@ -41,20 +41,29 @@ jobs:
         run: python -m unittest discover -s tests -p test_public_single_cell.py -v
       - name: Record actual checkout and resolved environment
         run: |
-          git rev-parse HEAD > "$RUNNER_TEMP/single-cell-source.txt"
-          python -m pip freeze > "$RUNNER_TEMP/single-cell-packages.txt"
+          git rev-parse HEAD
+          python -m pip freeze
       - name: Download exact public data, repeat calculation and exercise negative controls
         run: python examples/public-single-cell/run_example.py --output "$RUNNER_TEMP/single-cell-example"
-      - name: Retain small outputs, not the source expression matrix
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: public-single-cell-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            ${{ runner.temp }}/single-cell-example/*.json
-            ${{ runner.temp }}/single-cell-example/*.txt
-            ${{ runner.temp }}/single-cell-source.txt
-            ${{ runner.temp }}/single-cell-packages.txt
-          if-no-files-found: error
-          retention-days: 30
+      # The repository allows checkout, setup-python and CodeQL actions only.
+      # Keep its allowlist unchanged. Small public results belong in this run's
+      # logs/summary; no artifact service or expression-matrix upload is used.
+      - name: Preserve exact small evidence records in the run log and summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo '## Public single-cell file verification'
+            echo "Checkout: $(git rev-parse HEAD)"
+            for name in summary.json receipt.json verification.json; do
+              echo
+              echo "### $name"
+              echo '```json'
+              cat "$RUNNER_TEMP/single-cell-example/$name"
+              echo '```'
+            done
+            echo
+            echo 'Unsigned file-integrity and repeatability evidence only. No biological validation.'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Confirm tracked source remains unchanged
         run: git diff --exit-code
