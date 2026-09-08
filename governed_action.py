@@ -218,17 +218,39 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
     context = p.get("context")
     if context is not None and not isinstance(context, dict):
         v.fail("context must be an object when present")
-    if isinstance(context, dict) and context.get("redacted") is True:
+    if isinstance(context, dict):
+        redacted = context.get("redacted")
+        if "redacted" in context and not isinstance(redacted, bool):
+            v.fail("context.redacted must be a boolean")
+
+        commitments_present = "redaction_commitments" in context
         commitments = context.get("redaction_commitments")
-        if not isinstance(commitments, list) or not commitments:
+        if redacted is True and (
+            not commitments_present or (isinstance(commitments, list) and not commitments)
+        ):
             v.fail("context.redacted is true but no redaction_commitments present — redaction could hide exculpatory evidence")
-        else:
-            for c in commitments:
-                commitment = c.get("commitment") if isinstance(c, dict) else None
+
+        if commitments_present and not isinstance(commitments, list):
+            v.fail("context.redaction_commitments must be a list")
+        elif isinstance(commitments, list):
+            for index, item in enumerate(commitments):
+                path = f"context.redaction_commitments[{index}]"
+                if not isinstance(item, dict):
+                    v.fail(f"{path} must be an object")
+                    continue
+
+                if not isinstance(item.get("field_path"), str):
+                    v.fail(f"{path}.field_path must be a string")
+
+                salt = item.get("salt")
+                if not isinstance(salt, str):
+                    v.fail(f"{path}.salt must be a string")
+                elif len(salt) < 32:
+                    v.fail(f"{path}.salt must contain at least 32 characters")
+
+                commitment = item.get("commitment")
                 if not isinstance(commitment, str) or not _SHA256.fullmatch(commitment):
-                    v.fail("redaction_commitment entry malformed")
-                elif not isinstance(c.get("salt"), str) or len(c["salt"]) < 32:
-                    v.fail("redaction_commitment salt too short (<32 hex chars)")
+                    v.fail(f"{path}.commitment must be a lowercase sha256 digest")
 
     if v.state == "PASS" and v.reasons:
         v.state = "INCOMPLETE"

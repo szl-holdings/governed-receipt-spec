@@ -198,7 +198,90 @@ class TestRedactionCommitments(unittest.TestCase):
                 ]
                 v = validate_predicate(p, now=NOW)
                 self.assertEqual(v.state, "FAIL")
-                self.assertIn("redaction_commitment entry malformed", v.reasons)
+                self.assertIn(
+                    "context.redaction_commitments[0].commitment must be a lowercase sha256 digest",
+                    v.reasons,
+                )
+
+    def test_context_redacted_must_be_a_boolean_when_present(self):
+        for malformed in (None, 0, 1, 4.2, "true", [], {}):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["context"]["redacted"] = malformed
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn("context.redacted must be a boolean", v.reasons)
+
+    def test_commitments_are_validated_when_redaction_is_inactive(self):
+        for redacted_present in (True, False):
+            with self.subTest(redacted_present=redacted_present):
+                p = base_predicate()
+                if redacted_present:
+                    p["context"]["redacted"] = False
+                p["context"]["redaction_commitments"] = 42
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn("context.redaction_commitments must be a list", v.reasons)
+
+    def test_redaction_commitment_entry_must_be_an_object(self):
+        for malformed in (None, 42, "commitment", []):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["context"]["redaction_commitments"] = [malformed]
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn("context.redaction_commitments[0] must be an object", v.reasons)
+
+    def test_redaction_commitment_field_path_must_be_a_string(self):
+        malformed_values = (None, True, 42, 4.2, [], {})
+        cases = [(False, None)] + [(True, value) for value in malformed_values]
+        for present, malformed in cases:
+            with self.subTest(present=present, malformed=malformed):
+                p = base_predicate()
+                item = {
+                    "salt": "f" * 32,
+                    "commitment": "c" * 64,
+                }
+                if present:
+                    item["field_path"] = malformed
+                p["context"]["redaction_commitments"] = [item]
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertIn(
+                    "context.redaction_commitments[0].field_path must be a string",
+                    v.reasons,
+                )
+
+    def test_valid_optional_redaction_context_preserves_pass(self):
+        item = {"field_path": "", "salt": "f" * 32, "commitment": "c" * 64}
+        contexts = (
+            {},
+            {"redacted": False},
+            {"redaction_commitments": []},
+            {"redacted": False, "redaction_commitments": []},
+            {"redaction_commitments": [item]},
+            {"redacted": False, "redaction_commitments": [item]},
+            {"redacted": True, "redaction_commitments": [item]},
+        )
+        for context in contexts:
+            with self.subTest(context=context):
+                p = base_predicate()
+                p["context"] = context
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "PASS", msg=str(v.reasons))
+
+    def test_present_commitment_salt_is_validated_when_redaction_is_inactive(self):
+        for malformed in (None, True, 42, 4.2, [], {}, "short"):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["context"]["redaction_commitments"] = [
+                    {"field_path": "action.target", "salt": malformed, "commitment": "c" * 64}
+                ]
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertTrue(
+                    any(reason.startswith("context.redaction_commitments[0].salt ") for reason in v.reasons)
+                )
 
 
 class TestEvidenceCompleteness(unittest.TestCase):
