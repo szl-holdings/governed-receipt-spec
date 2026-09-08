@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Synthetic regression fixtures, not measurements from the GEO dataset."""
 import base64
-import copy
 import importlib.util
 import json
 import tempfile
