@@ -1,0 +1,42 @@
+{
+  "schema": "public-single-cell-executed-record/v1",
+  "source_commit": "160e39b1383a0e249399b6dfb72983b67aef7fe8",
+  "execution_url": "https://huggingface.co/jobs/SZLHOLDINGS/6a9f615b259f8e97255ed671",
+  "execution_environment": {"image_tag": "python:3.12-slim", "hardware": "cpu-basic", "python": "3.12.14", "gpu_used": false, "secrets_requested": false},
+  "record_origin": "Copied from completed command outputs in the linked job; this record is not signed.",
+  "synthetic_test_count": 14,
+  "synthetic_tests_passed": 14,
+  "actual_dataset_runner_exit_code": 0,
+  "summary": {
+    "accession": "GSE85241", "cell_columns": 3072, "endogenous_feature_rows": 19059, "ercc_feature_rows": 81, "feature_rows": 19140,
+    "groups": [
+      {"cell_columns": 768, "columns_without_positive_endogenous_features": 0, "endogenous_detected_features_max": 12188, "endogenous_detected_features_median": 396.0, "endogenous_detected_features_min": 4, "source_donor_label": "D28"},
+      {"cell_columns": 768, "columns_without_positive_endogenous_features": 0, "endogenous_detected_features_max": 8403, "endogenous_detected_features_median": 4043.5, "endogenous_detected_features_min": 13, "source_donor_label": "D29"},
+      {"cell_columns": 768, "columns_without_positive_endogenous_features": 0, "endogenous_detected_features_max": 12101, "endogenous_detected_features_median": 5348.0, "endogenous_detected_features_min": 62, "source_donor_label": "D30"},
+      {"cell_columns": 768, "columns_without_positive_endogenous_features": 0, "endogenous_detected_features_max": 8682, "endogenous_detected_features_median": 4631.5, "endogenous_detected_features_min": 67, "source_donor_label": "D31"}
+    ],
+    "input_sha256": "2f253ffb1f6d54f6bb259e862195f5c20ea3f13e00471b9864ff92773658f513",
+    "interpretation": "Descriptive file summary only; source donor labels are not independently authenticated donor identities.",
+    "non_integer_entries": 12442034,
+    "parameters": {"cell_filter": "none; all submitted columns retained", "clinical_or_causal_validation": false, "differential_expression": false, "exclude_from_endogenous_counts": "feature identifiers starting with ERCC-", "gene_signature_scoring": false, "normalization": "none; submitted processed values used without rounding", "operation": "per-column positive-feature counts, grouped by source donor label", "positive_threshold": 0, "statistical_hypothesis_tests": false},
+    "positive_entries": 12442034, "schema": "public-single-cell-file-summary/v1", "source_donor_label_count": 4
+  },
+  "receipt": {
+    "_pae_sha256": "161b77aa7acb9f62b3efa95170bd775185208bac6e1346eee2417ebfb2688c11",
+    "payload": "eyJfdHlwZSI6Imh0dHBzOi8vaW4tdG90by5pby9TdGF0ZW1lbnQvdjEiLCJwcmVkaWNhdGUiOnsiYW5hbHlzaXNfc2hhMjU2IjoiZTU3YmY1NGUzZGY0ODYxNDY5MjhmNjQ3MmIzNjliNTRlMzc0ODFhZGYyMDg3ZDNmOGQ1YTI2ZmZmMDNkNjc1YiIsImNsYWltIjoiUmVjb3JkZWQgZmlsZSBpbnRlZ3JpdHkgYW5kIGRldGVybWluaXN0aWMgc3VtbWFyeSBvbmx5OyBub3QgYmlvbG9naWNhbCB2YWxpZGl0eSBvciB0cnVzdGVkIGF1dGhvcnNoaXAuIiwiaW5wdXQiOnsiYnl0ZXMiOjE3MDA1NDk4LCJzaGEyNTYiOiIyZjI1M2ZmYjFmNmQ1NGY2YmIyNTllODYyMTk1ZjVjMjBlYTNmMTNlMDA0NzFiOTg2NGZmOTI3NzM2NThmNTEzIiwidXJsIjoiaHR0cHM6Ly9mdHAubmNiaS5ubG0ubmloLmdvdi9nZW8vc2VyaWVzL0dTRTg1bm5uL0dTRTg1MjQxL3N1cHBsL0dTRTg1MjQxX2NlbGxzeXN0ZW1zX2RhdGFzZXRfNGRvbm9yc191cGRhdGVkLmNzdi5neiJ9LCJwYXJhbWV0ZXJzIjp7ImNlbGxfZmlsdGVyIjoibm9uZTsgYWxsIHN1Ym1pdHRlZCBjb2x1bW5zIHJldGFpbmVkIiwiY2xpbmljYWxfb3JfY2F1c2FsX3ZhbGlkYXRpb24iOmZhbHNlLCJkaWZmZXJlbnRpYWxfZXhwcmVzc2lvbiI6ZmFsc2UsImV4Y2x1ZGVfZnJvbV9lbmRvZ2Vub3VzX2NvdW50cyI6ImZlYXR1cmUgaWRlbnRpZmllcnMgc3RhcnRpbmcgd2l0aCBFUkNDLSIsImdlbmVfc2lnbmF0dXJlX3Njb3JpbmciOmZhbHNlLCJub3JtYWxpemF0aW9uIjoibm9uZTsgc3VibWl0dGVkIHByb2Nlc3NlZCB2YWx1ZXMgdXNlZCB3aXRob3V0IHJvdW5kaW5nIiwib3BlcmF0aW9uIjoicGVyLWNvbHVtbiBwb3NpdGl2ZS1mZWF0dXJlIGNvdW50cywgZ3JvdXBlZCBieSBzb3VyY2UgZG9ub3IgbGFiZWwiLCJwb3NpdGl2ZV90aHJlc2hvbGQiOjAsInN0YXRpc3RpY2FsX2h5cG90aGVzaXNfdGVzdHMiOmZhbHNlfSwidmVyaWZpZXJfZ2l0X2Jsb2IiOiI4NGNkNmI2N2E2YTkwNTJkYzZlYzZhMzM0YzgxMGI2YjQ3NTJiYzhmIn0sInByZWRpY2F0ZVR5cGUiOiJodHRwczovL2dpdGh1Yi5jb20vc3psLWhvbGRpbmdzL2dvdmVybmVkLXJlY2VpcHQtc3BlYy9leGFtcGxlcy9wdWJsaWMtc2luZ2xlLWNlbGwvdjEiLCJzdWJqZWN0IjpbeyJkaWdlc3QiOnsic2hhMjU2IjoiM2E1NTM5ZTkyMmFlNjg2ODdjODA2ZjM1ZGY1NDBmMzY1YjBhMjQ5ZTFmNjU0Yjg3ZjUzMDlkMDc0ZWE3N2RmNiJ9LCJuYW1lIjoic3VtbWFyeS5qc29uIn1dfQo=",
+    "payloadType": "application/vnd.in-toto+json", "signatures": [], "signed": false
+  },
+  "verification": {
+    "analysis_sha256": "e57bf54e3df486146928f6472b369b54e37481adf2087d3f8d5a26fff03d675b",
+    "biological_claim_validated": false,
+    "checks": {"changed_output_file_rejected": true, "changed_receipt_payload_rejected": true, "intact_bundle": true, "repeat_summary_byte_identical": true},
+    "existing_verifier_report": ["- receipt[0]: decision fields decoded from DSSE envelope payload", "    dsse:   PASS DSSE envelope well-formed (unsigned, 0 signature(s))", "    intoto: PASS in-toto Statement v1 validated via in-toto-attestation 0.9.3", "    sig:    PASS no signatures to verify (n/a)", "    hash:   PASS DSSE PAE sha256 verified (161b77aa7acb9f62)", "    bind:   PASS flat envelope contains no external clear claims (n/a)", "    schema: SKIP non-inference receipt (envelope + hash checks only)", "- chain: PASS no chainable receipts (n/a)"],
+    "input_sha256": "2f253ffb1f6d54f6bb259e862195f5c20ea3f13e00471b9864ff92773658f513",
+    "packages": {"cryptography": "50.0.1", "in-toto-attestation": "0.9.3"}, "python": "3.12.14",
+    "receipt_sha256": "6e68b123523eac5d1ce8361e7f82159c1409cf4e92da29516b4e7383fe5df483",
+    "schema": "public-single-cell-verification/v1", "scope": "file integrity and repeatability, not biological validation",
+    "scoring_methods_benchmarked": [], "signature_verified": false, "status": "PASS",
+    "summary_sha256": "3a5539e922ae68687c806f35df540f365b0a249e1f654b87f5309d074ea77df6",
+    "trusted_authorship_verified": false, "verifier_git_blob": "84cd6b67a6a9052dc6ec6a334c810b6b4752bc8f"
+  }
+}
