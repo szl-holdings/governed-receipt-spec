@@ -163,7 +163,31 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
         if not isinstance(obligations, list) or not obligations:
             v.fail("evidence.obligations must be a non-empty list")
             obligations = []
-        unsatisfied = [o.get("id", "?") for o in obligations if isinstance(o, dict) and o.get("satisfied") is not True]
+        unsatisfied = []
+        for index, obligation in enumerate(obligations):
+            if not isinstance(obligation, dict):
+                v.fail(f"evidence.obligations[{index}] must be an object")
+                continue
+
+            obligation_id = obligation.get("id")
+            if not isinstance(obligation_id, str):
+                v.fail(f"evidence.obligations[{index}].id must be a string")
+                obligation_id = f"index {index}"
+
+            satisfied = obligation.get("satisfied")
+            if not isinstance(satisfied, bool):
+                v.fail(f"evidence.obligations[{index}].satisfied must be a boolean")
+            elif not satisfied:
+                unsatisfied.append(obligation_id)
+
+            digests = obligation.get("artifact_digests", [])
+            if not isinstance(digests, list):
+                v.fail(f"obligation {obligation_id} artifact_digests must be a list")
+                continue
+            for digest in digests:
+                if not isinstance(digest, str) or not _SHA256.match(digest):
+                    v.fail(f"obligation {obligation_id} carries a non-sha256 artifact digest")
+
         completeness = evidence.get("completeness")
         if unsatisfied:
             v.incomplete(f"evidence obligations unsatisfied: {', '.join(map(str, unsatisfied))}")
@@ -171,11 +195,6 @@ def validate_predicate(p: Any, *, now: Optional[datetime] = None) -> Verdict:
                 v.fail("evidence.completeness claims COMPLETE while obligations are unsatisfied — derived state must never be asserted")
         elif completeness != "COMPLETE":
             v.incomplete("evidence.completeness is not COMPLETE")
-        for o in obligations:
-            if isinstance(o, dict):
-                for d in o.get("artifact_digests", []) or []:
-                    if not isinstance(d, str) or not _SHA256.match(d):
-                        v.fail(f"obligation {o.get('id', '?')} carries a non-sha256 artifact digest")
 
     # --- timestamp (anti-backdating) ---
     ts = p.get("timestamp")

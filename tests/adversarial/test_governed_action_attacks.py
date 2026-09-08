@@ -208,6 +208,54 @@ class TestEvidenceCompleteness(unittest.TestCase):
         v = validate_predicate(p, now=NOW)
         self.assertEqual(v.state, "FAIL")
 
+    def test_non_object_obligation_fails_without_exception(self):
+        for malformed in (None, 42, "obligation", []):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["evidence"]["obligations"] = [malformed]
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertTrue(any("must be an object" in reason for reason in v.reasons))
+
+    def test_obligation_id_must_be_a_string(self):
+        for malformed in (None, 42):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["evidence"]["obligations"][0]["id"] = malformed
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertTrue(any(".id must be a string" in reason for reason in v.reasons))
+
+    def test_schema_valid_empty_or_whitespace_id_behavior_is_preserved(self):
+        for valid in ("", "   "):
+            with self.subTest(valid=valid):
+                p = base_predicate()
+                p["evidence"]["obligations"][0]["id"] = valid
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "PASS", msg=str(v.reasons))
+
+    def test_obligation_satisfied_must_be_a_boolean(self):
+        for malformed in (None, 1, "true"):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["evidence"]["obligations"][0]["satisfied"] = malformed
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertTrue(any(".satisfied must be a boolean" in reason for reason in v.reasons))
+
+    def test_artifact_digests_must_be_a_list_without_exception(self):
+        for malformed in (None, 42, "c" * 64, {}):
+            with self.subTest(malformed=malformed):
+                p = base_predicate()
+                p["evidence"]["obligations"][0]["artifact_digests"] = malformed
+                v = validate_predicate(p, now=NOW)
+                self.assertEqual(v.state, "FAIL")
+                self.assertTrue(any("artifact_digests must be a list" in reason for reason in v.reasons))
+
+    def test_conformant_evidence_still_passes(self):
+        v = validate_predicate(base_predicate(), now=NOW)
+        self.assertEqual(v.state, "PASS", msg=str(v.reasons))
+
 
 class TestAuthorityAndSideEffects(unittest.TestCase):
     """Attack: collapse side-effect classes or skip human approval on an
