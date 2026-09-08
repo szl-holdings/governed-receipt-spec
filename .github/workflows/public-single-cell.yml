@@ -26,18 +26,64 @@ permissions:
 
 jobs:
   reproduce:
-    runs-on: ubuntu-latest
-    timeout-minutes: 7
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: '3.12'
-      - name: Install existing pinned verifier dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Run input, artifact-binding and observed-record regressions
+          python-version: '3.12.14'
+      - name: Check reachable historical reproduction source and current file equivalence
+        run: |
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          p = json.loads(Path('examples/public-single-cell/reproduction-profile.json').read_text())
+          ref = p['historical_reproduction_commit']
+          subprocess.run(['git', 'merge-base', '--is-ancestor', ref, 'refs/remotes/origin/main'], check=True)
+          path = 'examples/public-single-cell/run_example.py'
+          historical = subprocess.check_output(['git', 'rev-parse', ref + ':' + path], text=True).strip()
+          current = subprocess.check_output(['git', 'hash-object', path], text=True).strip()
+          if historical != p['historical_analysis_git_blob'] or current != historical:
+              raise SystemExit('Historical reproduction does not bind the unchanged analysis.')
+          print('Published ancestor and unchanged analysis verified:', ref, historical)
+          PY
+      - name: Download reviewed binary dependencies and verify their bytes
+        run: |
+          set -euo pipefail
+          python examples/public-single-cell/check_reproduction.py --environment
+          python -m pip --isolated download --only-binary=:all: --require-hashes --index-url https://pypi.org/simple -r examples/public-single-cell/requirements-linux-cp312.lock --dest "$RUNNER_TEMP/single-cell-wheels"
+          python examples/public-single-cell/check_reproduction.py --wheelhouse "$RUNNER_TEMP/single-cell-wheels"
+      - name: Install without an index from the verified wheel files
+        run: |
+          set -euo pipefail
+          python -m pip --isolated install --no-index --find-links "$RUNNER_TEMP/single-cell-wheels" --only-binary=:all: --require-hashes -r examples/public-single-cell/requirements-linux-cp312.lock
+          python -m pip check
+          python examples/public-single-cell/check_reproduction.py --environment --installed
+      - name: Prove pip rejects a deliberately changed wheel against the fixed lock
+        run: |
+          python - <<'PY'
+          import json, os, subprocess, sys, tempfile
+          from pathlib import Path
+          p = json.loads(Path('examples/public-single-cell/reproduction-profile.json').read_text())
+          item = next(r for r in p['packages'] if r['name'] == 'pycparser')
+          original = Path(os.environ['RUNNER_TEMP']) / 'single-cell-wheels' / item['filename']
+          with tempfile.TemporaryDirectory() as temp:
+              root = Path(temp)
+              data = bytearray(original.read_bytes())
+              data[-1] ^= 1
+              (root / item['filename']).write_bytes(data)
+              lock = root / 'negative.lock'
+              lock.write_text(f"{item['name']}=={item['version']} --hash=sha256:{item['sha256']}\n")
+              result = subprocess.run([sys.executable, '-m', 'pip', '--isolated', 'install', '--dry-run', '--ignore-installed', '--no-deps', '--no-index', '--find-links', temp, '--only-binary=:all:', '--require-hashes', '-r', str(lock)], capture_output=True, text=True, timeout=30)
+              if result.returncode == 0 or 'DO NOT MATCH THE HASHES' not in result.stdout + result.stderr:
+                  raise SystemExit('Changed-wheel negative control did not fail for a hash mismatch.')
+              print('PASS: actual pip hash checking rejected changed wheel bytes.')
+          PY
+      - name: Run example, communication, receipt and reproduction regressions
         run: python -m unittest discover -s tests -p 'test_public_single_cell*.py' -v
       - name: Record actual checkout and resolved environment
         run: |
@@ -45,28 +91,41 @@ jobs:
           python -m pip freeze
       - name: Download exact public data, repeat calculation and exercise negative controls
         run: python examples/public-single-cell/run_example.py --output "$RUNNER_TEMP/single-cell-example"
-      - name: Compare the actual recomputation with the recorded public example
+      - name: Build the digest-pinned example container without publishing it
+        run: |
+          set -euo pipefail
+          docker build --platform linux/amd64 --build-arg "SOURCE_REVISION=$(git rev-parse HEAD)" --iidfile "$RUNNER_TEMP/single-cell-image.id" -f examples/public-single-cell/Dockerfile -t single-cell-repro:qualification .
+          docker image inspect single-cell-repro:qualification --format '{{json .Id}} {{json .Config.Labels}}'
+      - name: Recompute on the real input with container networking disabled
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/single-cell-container"
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" --tmpfs /tmp:rw,noexec,nosuid,size=16m -v "$RUNNER_TEMP/single-cell-example/source.tsv.gz:/input/source.tsv.gz:ro" -v "$RUNNER_TEMP/single-cell-container:/out:rw" single-cell-repro:qualification --input /input/source.tsv.gz --output /out/result
+      - name: Require host, offline container and retained evidence to agree
         run: |
           python - <<'PY'
           import json, os
           from pathlib import Path
           recorded = json.loads(Path('examples/public-single-cell/observed-run.json').read_text())
-          output = Path(os.environ['RUNNER_TEMP']) / 'single-cell-example'
+          root = Path(os.environ['RUNNER_TEMP'])
+          host = root / 'single-cell-example'
+          container = root / 'single-cell-container/result'
           for name in ('summary', 'receipt'):
-              current = json.loads((output / (name + '.json')).read_text())
-              if current != recorded[name]:
-                  raise SystemExit(name + ' differs from the retained real-data run')
-          print('Fresh GEO calculation matches retained summary and receipt exactly.')
+              a, b = (host / (name + '.json')).read_bytes(), (container / (name + '.json')).read_bytes()
+              if a != b or json.loads(a) != recorded[name]:
+                  raise SystemExit(name + ' differs between host, offline container or retained result')
+          print('PASS: host and offline container output bytes agree; both match the retained result.')
           PY
-      # Only permitted checkout/setup-python actions are used. Keep the org's
-      # action allowlist unchanged; logs/summary carry the small public evidence.
-      - name: Preserve exact small evidence records in the run log and summary
+      # Only existing permitted actions are used. No artifact-service upload,
+      # profile write, signing credential, image push or public matrix copy.
+      - name: Preserve small evidence in the run log and summary
         shell: bash
         run: |
           set -euo pipefail
           {
-            echo '## Public single-cell file verification'
+            echo '## Public single-cell locked reproduction'
             echo "Checkout: $(git rev-parse HEAD)"
+            echo "Built image ID: $(cat "$RUNNER_TEMP/single-cell-image.id")"
             for name in summary.json receipt.json verification.json; do
               echo
               echo "### $name"
@@ -75,7 +134,7 @@ jobs:
               echo '```'
             done
             echo
-            echo 'Unsigned file-integrity and repeatability evidence only. No biological validation.'
+            echo 'Unsigned file-integrity and repeatability only. No scientific validity or independent replication claim.'
           } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Confirm tracked source remains unchanged
         run: git diff --exit-code
