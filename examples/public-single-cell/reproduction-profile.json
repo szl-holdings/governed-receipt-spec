@@ -1,0 +1,27 @@
+{
+  "schema": "public-single-cell-reproduction-profile/v1",
+  "python": "3.12.14",
+  "platform": "linux/amd64",
+  "minimum_glibc": "2.34",
+  "base_image": "python:3.12.14-slim@sha256:2fe5997d249a808b8eeea52c58a1dbffbba28754dc11699ef5c029f2d818ce79",
+  "base_index_digest_observed": "sha256:78387bc3881b8273120a12ebe6c1ab22b018ccc2c9adf565ae1ac9b536e184ea",
+  "base_manifest_observation": "https://huggingface.co/jobs/SZLHOLDINGS/6a9fed098e5f7b7fd14cb9ad",
+  "wheel_observation": "https://huggingface.co/jobs/SZLHOLDINGS/6a9feccb8e5f7b7fd14cb99b",
+  "historical_reproduction_commit": "66700778fd995051f01c9ed7fe42226b464a31a4",
+  "historical_analysis_git_blob": "a48d6742b119792674611a2dbe0bff051cbae6db",
+  "packages": [
+    {"name": "cffi", "version": "2.1.1", "filename": "cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", "sha256": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf", "bytes": 221822},
+    {"name": "cryptography", "version": "50.0.1", "filename": "cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl", "sha256": "51afcfceb15597cf2635068e4ac9a56b2abde622edde17f37d85fd7b5306497a", "bytes": 4746230},
+    {"name": "in-toto-attestation", "version": "0.9.3", "filename": "in_toto_attestation-0.9.3-py3-none-any.whl", "sha256": "1f44d3f3bded1ed551e260c5e9f834ee05de03f1d2f360bada5a172c11d748ff", "bytes": 13617},
+    {"name": "protobuf", "version": "7.36.1", "filename": "protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl", "sha256": "97198b77e369a0abd8e262b8f6c7266c55ddb796a3a12c76d7b8881188ed83aa", "bytes": 343228},
+    {"name": "pycparser", "version": "3.0", "filename": "pycparser-3.0-py3-none-any.whl", "sha256": "b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992", "bytes": 48172}
+  ],
+  "limits": {
+    "wheel_hashes_are_signatures": false,
+    "analysis_receipt_signed": false,
+    "biological_validation": false,
+    "external_independent_replication": false,
+    "byte_identical_container_rebuilds_claimed": false,
+    "other_platforms_qualified": false
+  }
+}

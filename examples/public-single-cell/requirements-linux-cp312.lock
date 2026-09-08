@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Reviewed binary artifacts for CPython 3.12, Linux x86_64, glibc >= 2.34.
+# Regenerate only after reviewing upstream metadata and rerunning the example.
+cffi==2.1.1 --hash=sha256:c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf
+cryptography==50.0.1 --hash=sha256:51afcfceb15597cf2635068e4ac9a56b2abde622edde17f37d85fd7b5306497a
+in-toto-attestation==0.9.3 --hash=sha256:1f44d3f3bded1ed551e260c5e9f834ee05de03f1d2f360bada5a172c11d748ff
+protobuf==7.36.1 --hash=sha256:97198b77e369a0abd8e262b8f6c7266c55ddb796a3a12c76d7b8881188ed83aa
+pycparser==3.0 --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
