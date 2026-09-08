@@ -1,23 +1,18 @@
 # Post draft
 
-A result is easier to examine when the path from data to output is visible.
+Can someone else retrace a computational result—not just read its conclusion?
 
-I built a small reproducibility example using the public human pancreatic single-cell dataset GSE85241, published by Muraro and colleagues.
+I built a small reproducibility example using the public human pancreatic single-cell dataset GSE85241 from Muraro and colleagues.
 
-It reads the submitted expression file, calculates a descriptive summary, and records the exact input file, code, parameters, and output. The example retains all 3,072 submitted cell columns across four source donor labels; it is not a quality-filtered analysis.
+It keeps all 3,072 submitted cell columns across four source donor labels, uses the processed expression values without rounding, and calculates a descriptive file summary. This is an unfiltered example, not a biological comparison.
 
-The calculation produced identical output bytes on repeat execution. Deliberately changing the recorded payload or result file caused verification to fail against the retained reference.
+A machine-readable analysis record links the exact input file, code, parameters, and output. Repeating the calculation produced identical output bytes. Deliberately changing the recorded payload or result file was rejected against the retained reference.
 
-This is not a new gene-scoring method, a biological discovery, or a replacement for donor-aware statistical analysis. The record is unsigned: it checks file consistency and repeatability, not trusted authorship or biological validity.
+The record is unsigned: it checks file consistency and repeatability, not trusted authorship or biological validity. It is not a new gene-scoring method and does not replace donor-aware statistical analysis.
 
-The code, observed output, verification record, and limitations are available in one worked example below. Credit for the underlying data belongs to the original researchers.
+Code, observed results, and limitations:
+https://github.com/szl-holdings/governed-receipt-spec/tree/320983d22e76fc9b26af0b2cd20799c5000543fc/examples/public-single-cell
 
-For researchers reviewing computational results: what information is most often missing when you try to reproduce someone else's analysis?
+Credit for the underlying data belongs to the original researchers.
 
-Worked example: ./README.md
-
-Data publication: https://doi.org/10.1016/j.cels.2016.09.002
-
----
-
-Before posting, replace the relative worked-example link with the exact public directory URL for the reviewed source. Do not replace it with an organization homepage or an internal model inventory. This file is a draft; no social post was sent by the workflow.
+What information is most often missing when you try to reproduce someone else's analysis?
