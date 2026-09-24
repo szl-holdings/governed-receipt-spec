@@ -19,6 +19,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +28,17 @@ jobs:
     steps:
       # Org policy: every action is pinned to a full-length commit SHA.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.SOURCE_REVISION }}
+
+      - name: Prove exact event source
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$SOURCE_REVISION"
+          echo "exact source verified: $actual"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
