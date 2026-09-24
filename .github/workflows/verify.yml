@@ -2,9 +2,12 @@ name: verify
 
 on:
   push:
-    branches: [main]
-  pull_request:
-
+    branches:
+    - main
+  pull_request: null
+  merge_group:
+    types:
+    - checks_requested
 permissions:
   contents: read
 

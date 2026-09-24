@@ -4,23 +4,26 @@ name: Public single-cell example
 on:
   pull_request:
     paths:
-      - 'examples/public-single-cell/**'
-      - 'tests/test_public_single_cell*.py'
-      - 'verify.py'
-      - 'schema/**'
-      - 'requirements.txt'
-      - '.github/workflows/public-single-cell.yml'
+    - examples/public-single-cell/**
+    - tests/test_public_single_cell*.py
+    - verify.py
+    - schema/**
+    - requirements.txt
+    - .github/workflows/public-single-cell.yml
   push:
-    branches: [main]
+    branches:
+    - main
     paths:
-      - 'examples/public-single-cell/**'
-      - 'tests/test_public_single_cell*.py'
-      - 'verify.py'
-      - 'schema/**'
-      - 'requirements.txt'
-      - '.github/workflows/public-single-cell.yml'
-  workflow_dispatch:
-
+    - examples/public-single-cell/**
+    - tests/test_public_single_cell*.py
+    - verify.py
+    - schema/**
+    - requirements.txt
+    - .github/workflows/public-single-cell.yml
+  workflow_dispatch: null
+  merge_group:
+    types:
+    - checks_requested
 permissions:
   contents: read
 
