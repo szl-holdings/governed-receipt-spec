@@ -11,6 +11,7 @@ WORKFLOWS = (
     ".github/workflows/codeql.yml",
     ".github/workflows/base-python-ci.yml",
     ".github/workflows/forbidden-domain.yml",
+    ".github/workflows/bench-replay.yml",
 )
 SOURCE_EXPRESSION = "SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}"
 CHECKOUT_REF = "ref: ${{ env.SOURCE_REVISION }}"
