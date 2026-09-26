@@ -1,0 +1,57 @@
+# Replays the public conformance corpus SZLHOLDINGS/governed-receipts-bench
+# against this repo's verify.py on every push, pull request and merge-group
+# run, and fails if any fixture's observed outcome (PASS/FAIL, plus the
+# optional expected_reason token) differs from what the bench manifest
+# declares, or if the manifest is malformed or misses a fixture.
+#
+# The bench is fetched over plain HTTPS (standard library only) at an
+# immutable dataset commit, BENCH_REVISION; every downloaded file is checked
+# against the Hub's object id for that commit. When a verifier change alters
+# an outcome, publish a bench revision that records the new outcome (and adds
+# the verifier commit to the card's per-revision table), then bump
+# BENCH_REVISION in the same pull request as the verifier change.
+name: bench-replay
+
+on:
+  push:
+    branches:
+    - main
+  pull_request: null
+  merge_group:
+    types:
+    - checks_requested
+  workflow_dispatch: null
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+      BENCH_REPO: SZLHOLDINGS/governed-receipts-bench
+      BENCH_REVISION: 235ef348dce7b9eaca915c8668158039d6831a8c
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.SOURCE_REVISION }}
+      - name: Prove exact event source
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$SOURCE_REVISION"
+          echo "exact source verified: $actual"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install pinned dependencies (v11 doctrine §7.1)
+        run: pip install -r requirements.txt
+      - name: Replay governed-receipts-bench against verify.py
+        run: >
+          python scripts/replay_bench.py
+          --repo "$BENCH_REPO"
+          --revision "$BENCH_REVISION"
+          --verifier verify.py
