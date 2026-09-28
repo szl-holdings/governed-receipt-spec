@@ -80,7 +80,7 @@ Without `--verify-key` the signature check is reported as `SKIP` — never as a 
 
 > Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, the `prev ↔ digest` chain, and (with a public key) the envelope signature. The same signatures also verify upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url` and vendored for offline use at `tests/fixtures/cosign.pub`.
 
-**Prefer to click?** Paste any receipt into the live verifier Space — **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — which runs this exact `verify.py` in your browser (via Pyodide, no upload). Or run against the benchmark corpus **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled tampers (must FAIL).
+**Prefer to click?** Paste any receipt into the live verifier Space — **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — which runs this exact `verify.py` in your browser (via Pyodide, no upload). Or run against the benchmark corpus **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled negatives (must FAIL), each with a declared expected outcome for a pinned verifier revision. `python scripts/replay_bench.py --revision <dataset-commit>` replays it, and the `bench-replay` workflow does so on every push and PR.
 
 ---
 
@@ -105,12 +105,20 @@ python -m unittest discover -s tests -v
 
 Valid examples must pass; tampered fixtures ([`tests/fixtures/`](tests/fixtures)) must fail — a flipped payload byte breaks the content hash, and a rewritten `prev` breaks the chain.
 
+Replay the benchmark corpus against this `verify.py` (standard library plus `requirements.txt`; fetches the dataset at an immutable commit over HTTPS, or use `--bench-dir` for a local copy):
+
+```bash
+python scripts/replay_bench.py --revision <governed-receipts-bench commit sha>
+```
+
+It exits non-zero if any fixture's outcome differs from `bench.jsonl`. CI pins the dataset commit in [`.github/workflows/bench-replay.yml`](.github/workflows/bench-replay.yml); a verifier change that alters an outcome needs a new bench revision and a bumped pin.
+
 ---
 
 ## The estate
 
 - **Live verifier Space:** **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — paste a receipt, verify it in your browser (runs this `verify.py` via Pyodide).
-- **Benchmark corpus:** **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (PASS) + labeled tampers (FAIL) for conformance testing.
+- **Benchmark corpus:** **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (PASS) + labeled negatives (FAIL) for conformance testing, replayed in CI.
 - Live console: **[a-11-oy.com](https://a-11-oy.com)** · a11oy console `szlholdings-a11oy.hf.space`
 - Hugging Face org: **[SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS)** — receipt datasets (`a11oy-verifiable-corpus`, `readiness-runs`, `szl-evidence`) and the **Governed Kernels** collection (`szl-lambda-gate`, `szl-blocked`, `governed-inference-meter`, …).
 - GitHub org: **[szl-holdings](https://github.com/szl-holdings)**
