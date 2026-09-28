@@ -31,7 +31,7 @@ jobs:
     env:
       SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
       BENCH_REPO: SZLHOLDINGS/governed-receipts-bench
-      BENCH_REVISION: 235ef348dce7b9eaca915c8668158039d6831a8c
+      BENCH_REVISION: 79b8c62f1f17ef2cfc30c06aa6485407afd9a86c
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
