@@ -76,7 +76,17 @@ The verifier, for each receipt:
 python verify.py --verify-key tests/fixtures/cosign.pub examples/a11oy-khipu-chain.json
 ```
 
-Without `--verify-key` the signature check is reported as `SKIP` — never as a pass. It prints a clear `PASS` / `FAIL` per receipt with reasons, and exits non-zero on any failure.
+Without `--verify-key` the signature check is reported as `SKIP`, including unsigned
+receipts. Successful file and overall results say `PASS (integrity-only; signatures
+not authenticated)`: only the applicable structure, content-hash, binding, schema
+and chain checks passed. The Python `check_signatures` API returns `None` for SKIP,
+`True` for verified signatures, and `False` for failure.
+
+With `--verify-key`, every record must contain a signed envelope with at least one
+signature, and every signature must verify against the supplied key. Missing or
+empty signatures fail, including in mixed signed/unsigned files. A successful
+result means signatures verified with that key; signer trust and authorization
+are not assessed. Any failed check produces a non-zero exit status.
 
 > Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, the `prev ↔ digest` chain, and (with a public key) the envelope signature. The same signatures also verify upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url` and vendored for offline use at `tests/fixtures/cosign.pub`.
 
@@ -104,6 +114,8 @@ Every file in [`examples/`](examples/) is drawn factually from public SZL datase
 ---
 
 ## Tests
+
+The policy-gate regression tests also require Bash and ripgrep (`rg`) on PATH.
 
 ```bash
 python -m unittest discover -s tests -v

@@ -8,6 +8,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from scripts import qualify_current_verifier as current
+
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("single_cell_example", ROOT / "examples/public-single-cell/run_example.py")
 EXAMPLE = importlib.util.module_from_spec(SPEC)
@@ -71,7 +73,13 @@ class MatrixSummaryTests(unittest.TestCase):
 class ReceiptBindingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.verifier = EXAMPLE.load_verifier()
+        # Qualify the current verifier against the historical adapter's synthetic
+        # contract; never relabel these unit fixtures as a historical execution.
+        cls.verifier = current.verify
+
+    def test_historical_loader_still_rejects_the_changed_verifier(self):
+        with self.assertRaisesRegex(EXAMPLE.ExampleError, "review the changed verifier"):
+            EXAMPLE.load_verifier()
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

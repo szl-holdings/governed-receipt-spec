@@ -217,7 +217,11 @@ def run_verifier(verifier, fixture_path, timeout=120):
         return "ERROR", ["verifier timed out after %ss" % timeout]
     lines = proc.stdout.decode("utf-8", errors="replace").splitlines()
     overall = [ln.strip() for ln in lines if ln.strip().startswith("OVERALL:")]
-    if proc.returncode == 0 and overall == ["OVERALL: PASS"]:
+    # The benchmark invokes integrity-only mode; an unscoped or authenticated
+    # result must not be silently interpreted as this mode's outcome.
+    if proc.returncode == 0 and overall == [
+        "OVERALL: PASS (integrity-only; signatures not authenticated)"
+    ]:
         return "PASS", lines
     if proc.returncode == 1 and overall == ["OVERALL: FAIL"]:
         return "FAIL", lines

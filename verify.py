@@ -360,23 +360,29 @@ def check_intoto_statement(envelope):
 
 
 def check_signatures(envelope, public_key_pem):
-    """Cryptographically verify DSSE envelope signatures. Returns (ok, message).
+    """Verify signatures; return (True=verified, False=failed, None=SKIP, message).
 
     Each signature is verified as ECDSA P-256 SHA-256 over the DSSE PAE of the
     DECODED payload bytes (never the base64 text), using the pinned
     ``cryptography`` 50.0.1 library. Without a key the check is an honest
-    SKIP: it never claims a pass it did not perform.
+    SKIP: it never claims a pass it did not perform. Supplying a key requires
+    an envelope with at least one signature on every record.
     """
     if envelope is None:
-        return True, "no envelope to check (n/a)"
+        if public_key_pem is not None:
+            return False, "--verify-key requires a signed envelope on every record"
+        return None, "no envelope; signature authenticity not checked"
     sigs = envelope.get("signatures")
-    if not isinstance(sigs, list) or not sigs:
-        return True, "no signatures to verify (n/a)"
+    if not isinstance(sigs, list):
+        return False, "signatures missing/not a list"
+    if not sigs:
+        if public_key_pem is not None:
+            return False, "--verify-key requires at least one envelope signature"
+        return None, "unsigned envelope; signature authenticity not checked"
     if public_key_pem is None:
-        return True, (
-            "SKIP - %d signature(s) present but no --verify-key supplied; "
-            "structure + content hash checked, signature not cryptographically "
-            "verified" % len(sigs)
+        return None, (
+            "%d signature(s) present but no --verify-key supplied; "
+            "signature not cryptographically verified" % len(sigs)
         )
     try:
         body = base64.b64decode(envelope["payload"], validate=True)
@@ -648,7 +654,12 @@ def check_chain(decisions):
 # Top-level verification                                                       #
 # --------------------------------------------------------------------------- #
 def verify_records(records, schema, public_key_pem=None):
-    """Verify a list of records. Returns (ok, report_lines)."""
+    """Return (ok, report_lines) for the selected verification mode.
+
+    Without a key, ok covers only the applicable integrity/structure checks.
+    With a key, ok also requires verified signatures on every record. Neither
+    mode establishes signer trust, authorization, or correctness of execution.
+    """
     if not records:
         return False, ["- records: FAIL no receipt records found"]
 
@@ -673,8 +684,9 @@ def verify_records(records, schema, public_key_pem=None):
 
         # (f) cryptographic signature verification (SKIP without --verify-key)
         g_ok, g_msg = check_signatures(envelope, public_key_pem)
-        ok = ok and g_ok
-        lines.append("    sig:    %s %s" % ("PASS" if g_ok else "FAIL", g_msg))
+        ok = ok and g_ok is not False
+        g_status = "SKIP" if g_ok is None else ("PASS" if g_ok else "FAIL")
+        lines.append("    sig:    %s %s" % (g_status, g_msg))
 
         # (b) content hash
         h_ok, h_msg = check_content_hash(record, envelope)
@@ -736,8 +748,8 @@ def main(argv=None):
         default=None,
         metavar="PEM",
         help=(
-            "path to a PEM ECDSA P-256 public key; when given, every envelope "
-            "signature is cryptographically verified (offline). Without it, "
+            "path to a PEM ECDSA P-256 public key; when given, every record "
+            "must have a signed envelope and all signatures must verify. Without it, "
             "signature verification is reported as SKIP, never as a pass."
         ),
     )
@@ -753,6 +765,11 @@ def main(argv=None):
             print("ERROR: cannot read --verify-key %s: %s" % (args.verify_key, exc))
             return 1
     all_ok = True
+    success = (
+        "PASS (integrity-only; signatures not authenticated)"
+        if public_key_pem is None
+        else "PASS (signatures verified with supplied key; trust/authorization not assessed)"
+    )
     for path in args.receipts:
         print("=== %s ===" % path)
         try:
@@ -763,11 +780,11 @@ def main(argv=None):
             continue
         for line in lines:
             print("  " + line)
-        print("  RESULT: %s" % ("PASS" if file_ok else "FAIL"))
+        print("  RESULT: %s" % (success if file_ok else "FAIL"))
         all_ok = all_ok and file_ok
 
     print()
-    print("OVERALL: %s" % ("PASS" if all_ok else "FAIL"))
+    print("OVERALL: %s" % (success if all_ok else "FAIL"))
     return 0 if all_ok else 1
 
 
