@@ -1,0 +1,5 @@
+# Evidence and source byte hashes use the repository's canonical LF bytes.
+*.py text eol=lf
+*.json text eol=lf
+*.pub text eol=lf
+*.pem text eol=lf

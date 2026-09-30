@@ -41,6 +41,31 @@ Every submitted cell column and feature row is read. Features whose submitted va
 
 ## Reproduce the historical calculation
 
+Historical execution evidence remains immutable: `run_example.py`, its verifier
+pin, `observed-run.json`, and the reproduction profile have not been relabeled
+as a run of the current verifier. On current source, the workflow uses
+`scripts/stage_historical_example.py` to assemble the pinned historical verifier,
+schema and analysis in a new temporary directory. It checks their Git blobs,
+copies the current locked reproduction tooling, and records each file's origin
+and digest. Host and container reproduction both use that staged context and
+must still match the retained summary and receipt. Historical verifier reports
+retain their original wording; they are not current verification claims.
+
+Current-verifier qualification is a separate offline command:
+
+```sh
+python scripts/qualify_current_verifier.py --check conformance/current-verifier-qualification.json
+```
+
+It replays the unchanged historical receipt and public signed/negative fixtures
+through the current verifier. The additive manifest binds actual observed
+results to exact verifier, schema, qualifier and fixture hashes, with the local
+Python/platform/package versions recorded separately. CI reruns these checks in
+its own environment. This does not rerun GEO data, replace historical receipt
+hashes, establish signer trust, or qualify biological results. Synthetic adapter
+tests also use the current verifier explicitly; the historical loader continues
+to reject changed verifier bytes. No private keys or signed fixtures are created.
+
 The published commit below is part of the default-branch history. The current workflow checks that its analysis file has exactly the same Git blob as the unchanged current analysis. It does not relabel that published commit as the original CPU run's source.
 
 ```sh

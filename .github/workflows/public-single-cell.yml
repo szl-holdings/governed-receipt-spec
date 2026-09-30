@@ -10,6 +10,9 @@ on:
     - schema/**
     - requirements.txt
     - .github/workflows/public-single-cell.yml
+    - scripts/qualify_current_verifier.py
+    - scripts/stage_historical_example.py
+    - conformance/current-verifier-qualification.json
   push:
     branches:
     - main
@@ -20,6 +23,9 @@ on:
     - schema/**
     - requirements.txt
     - .github/workflows/public-single-cell.yml
+    - scripts/qualify_current_verifier.py
+    - scripts/stage_historical_example.py
+    - conformance/current-verifier-qualification.json
   workflow_dispatch: null
   merge_group:
     types:
@@ -31,18 +37,28 @@ jobs:
   reproduce:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: ${{ env.SOURCE_REVISION }}
+      - name: Prove exact event source
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$SOURCE_REVISION"
+          echo "exact source verified: $actual"
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12.14'
       - name: Check reachable historical reproduction source and current file equivalence
         run: |
           python - <<'PY'
-          import json, subprocess
+          import json, os, subprocess
           from pathlib import Path
           p = json.loads(Path('examples/public-single-cell/reproduction-profile.json').read_text())
           ref = p['historical_reproduction_commit']
@@ -53,6 +69,8 @@ jobs:
           if historical != p['historical_analysis_git_blob'] or current != historical:
               raise SystemExit('Historical reproduction does not bind the unchanged analysis.')
           print('Published ancestor and unchanged analysis verified:', ref, historical)
+          with open(os.environ['GITHUB_ENV'], 'a') as env:
+              print('HISTORICAL_COMMIT=' + ref, file=env)
           PY
       - name: Download reviewed binary dependencies and verify their bytes
         run: |
@@ -86,18 +104,22 @@ jobs:
                   raise SystemExit('Changed-wheel negative control did not fail for a hash mismatch.')
               print('PASS: actual pip hash checking rejected changed wheel bytes.')
           PY
+      - name: Qualify current verifier independently of historical reproduction
+        run: python scripts/qualify_current_verifier.py --check conformance/current-verifier-qualification.json
       - name: Run example, communication, receipt and reproduction regressions
         run: python -m unittest discover -s tests -p 'test_public_single_cell*.py' -v
       - name: Record actual checkout and resolved environment
         run: |
           git rev-parse HEAD
           python -m pip freeze
-      - name: Download exact public data, repeat calculation and exercise negative controls
-        run: python examples/public-single-cell/run_example.py --output "$RUNNER_TEMP/single-cell-example"
+      - name: Stage exact historical source without replacing current verifier
+        run: python scripts/stage_historical_example.py --output "$RUNNER_TEMP/historical-source"
+      - name: Reproduce historical calculation and exercise its negative controls
+        run: python "$RUNNER_TEMP/historical-source/examples/public-single-cell/run_example.py" --output "$RUNNER_TEMP/single-cell-example"
       - name: Build the digest-pinned example container without publishing it
         run: |
           set -euo pipefail
-          docker build --platform linux/amd64 --build-arg "SOURCE_REVISION=$(git rev-parse HEAD)" --iidfile "$RUNNER_TEMP/single-cell-image.id" -f examples/public-single-cell/Dockerfile -t single-cell-repro:qualification .
+          docker build --platform linux/amd64 --build-arg "SOURCE_REVISION=$SOURCE_REVISION" --label "org.szl.historical-source=$HISTORICAL_COMMIT" --label org.szl.verification-scope=historical-reproduction --iidfile "$RUNNER_TEMP/single-cell-image.id" -f "$RUNNER_TEMP/historical-source/examples/public-single-cell/Dockerfile" -t single-cell-repro:qualification "$RUNNER_TEMP/historical-source"
           docker image inspect single-cell-repro:qualification --format '{{json .Id}} {{json .Config.Labels}}'
       - name: Recompute on the real input with container networking disabled
         run: |
@@ -128,6 +150,9 @@ jobs:
           {
             echo '## Public single-cell locked reproduction'
             echo "Checkout: $(git rev-parse HEAD)"
+            echo "Historical payload source: $HISTORICAL_COMMIT"
+            echo 'Image source revision identifies current assembly tooling; the historical-source label identifies payload code.'
+            echo 'Historical reproduction and old verifier reports are separate from current-verifier qualification above.'
             echo "Built image ID: $(cat "$RUNNER_TEMP/single-cell-image.id")"
             for name in summary.json receipt.json verification.json; do
               echo

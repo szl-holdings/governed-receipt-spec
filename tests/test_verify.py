@@ -423,28 +423,12 @@ class SignatureVerificationTests(unittest.TestCase):
             return fh.read()
 
     def _signed_envelope(self):
-        from cryptography.hazmat.primitives import hashes, serialization
-        from cryptography.hazmat.primitives.asymmetric import ec
-
-        priv = ec.generate_private_key(ec.SECP256R1())
-        pub_pem = priv.public_key().public_bytes(
-            serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-        payload = b'{"k":"v","n":3600}'
-        ptype = "application/vnd.in-toto+json"
-        sig = priv.sign(verify.dsse_pae(ptype, payload), ec.ECDSA(hashes.SHA256()))
-        envelope = {
-            "payloadType": ptype,
-            "payload": base64.b64encode(payload).decode("ascii"),
-            "signatures": [
-                {"keyid": "test", "sig": base64.b64encode(sig).decode("ascii")}
-            ],
-        }
-        return envelope, priv, pub_pem, payload
+        with open(os.path.join(EXAMPLES, "a11oy-khipu-chain.json"), encoding="utf-8") as fh:
+            envelope = json.load(fh)[0]["payload"]["envelope"]
+        return envelope, self._cosign_pub(), base64.b64decode(envelope["payload"], validate=True)
 
     def test_pae_length_is_over_decoded_payload_bytes(self):
-        envelope, _, pub_pem, payload = self._signed_envelope()
+        envelope, pub_pem, payload = self._signed_envelope()
         # base64 text is strictly longer than the decoded payload, so the two
         # length fields can never coincide — a LEN over the base64 text would
         # be a signature-verify bypass.
@@ -453,28 +437,11 @@ class SignatureVerificationTests(unittest.TestCase):
         self.assertTrue(ok, msg)
         self.assertIn("1 signature(s) verified", msg)
 
-    def test_signature_over_base64_text_pae_fails(self):
-        # Sign a PAE whose LEN covers the base64 TEXT (the bypass class):
-        # the verifier must reject it because it recomputes over decoded bytes.
-        from cryptography.hazmat.primitives import hashes, serialization
-        from cryptography.hazmat.primitives.asymmetric import ec
-
-        priv = ec.generate_private_key(ec.SECP256R1())
-        pub_pem = priv.public_key().public_bytes(
-            serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-        payload = b'{"k":"v"}'
-        ptype = "application/vnd.in-toto+json"
-        b64 = base64.b64encode(payload).decode("ascii")
-        bad_sig = priv.sign(
-            verify.dsse_pae(ptype, b64.encode("ascii")), ec.ECDSA(hashes.SHA256())
-        )
-        envelope = {
-            "payloadType": ptype,
-            "payload": b64,
-            "signatures": [{"keyid": "x", "sig": base64.b64encode(bad_sig).decode("ascii")}],
-        }
+    def test_signature_rejects_payload_replaced_by_base64_text(self):
+        # Retain the public signature bytes; replacing the decoded body with
+        # base64 text must change the PAE and invalidate that signature.
+        envelope, pub_pem, _ = self._signed_envelope()
+        envelope["payload"] = base64.b64encode(envelope["payload"].encode("ascii")).decode("ascii")
         ok, msg = verify.check_signatures(envelope, pub_pem)
         self.assertFalse(ok)
         self.assertIn("mismatch", msg)
@@ -490,13 +457,8 @@ class SignatureVerificationTests(unittest.TestCase):
         self.assertEqual(len(verified), 5, "\n".join(lines))
 
     def test_wrong_key_fails(self):
-        from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric import ec
-
-        wrong = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
-            serialization.Encoding.PEM,
-            serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
+        with open(os.path.join(FIXTURES, "upstream-public", "ec-public.pem"), "rb") as fh:
+            wrong = fh.read()
         ok, lines = verify.verify_file(
             os.path.join(EXAMPLES, "a11oy-khipu-chain.json"), SCHEMA, wrong
         )
@@ -527,10 +489,12 @@ class SignatureVerificationTests(unittest.TestCase):
         self.assertFalse(any("signature(s) verified" in ln for ln in skips))
 
     def test_non_p256_verify_key_fails(self):
+        from cryptography import x509
         from cryptography.hazmat.primitives import serialization
-        from cryptography.hazmat.primitives.asymmetric import ec
-
-        p384 = ec.generate_private_key(ec.SECP384R1()).public_key().public_bytes(
+        with open(os.path.join(FIXTURES, "upstream-public", "ecdsa-root.pem"), "rb") as fh:
+            public_key = x509.load_pem_x509_certificate(fh.read()).public_key()
+        self.assertEqual(public_key.curve.name, "secp384r1")
+        p384 = public_key.public_bytes(
             serialization.Encoding.PEM,
             serialization.PublicFormat.SubjectPublicKeyInfo,
         )
