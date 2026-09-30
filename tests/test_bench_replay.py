@@ -18,6 +18,7 @@ import os
 import shutil
 import tempfile
 import unittest
+from unittest.mock import Mock, patch
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXAMPLES = os.path.join(REPO_ROOT, "examples")
@@ -71,6 +72,19 @@ class BenchReplayTest(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn("bench replay: 6/6 fixtures match", out)
         self.assertNotIn("MISMATCH", out)
+
+    def test_unscoped_or_authenticated_success_is_not_integrity_evidence(self):
+        for overall in (
+            "OVERALL: PASS",
+            "OVERALL: PASS (signatures verified with supplied key; "
+            "trust/authorization not assessed)",
+            "OVERALL: PASS (integrity-only; signatures not authenticated)\nOVERALL: FAIL",
+        ):
+            with self.subTest(overall=overall):
+                result = Mock(returncode=0, stdout=(overall + "\n").encode("utf-8"))
+                with patch.object(replay_bench.subprocess, "run", return_value=result):
+                    outcome, _ = replay_bench.run_verifier("unused", "unused")
+                self.assertEqual(outcome, "ERROR")
 
     def test_lake_labelled_valid_pass_is_a_mismatch(self):
         cases = [c for c in SPEC_LAYOUT if "lake" not in c[0]]
