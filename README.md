@@ -80,7 +80,11 @@ Without `--verify-key` the signature check is reported as `SKIP` — never as a 
 
 > Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, the `prev ↔ digest` chain, and (with a public key) the envelope signature. The same signatures also verify upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url` and vendored for offline use at `tests/fixtures/cosign.pub`.
 
-**Prefer to click?** Paste any receipt into the live verifier Space — **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — which runs this exact `verify.py` in your browser (via Pyodide, no upload). Or run against the benchmark corpus **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled negatives (must FAIL), each with a declared expected outcome for a pinned verifier revision. `python scripts/replay_bench.py --revision <dataset-commit>` replays it, and the `bench-replay` workflow does so on every push and PR.
+**Browser consumer status:** the former `SZLHOLDINGS/governed-receipt-verifier` standalone Space was retired and its files preserved in the [Command Centre archive](https://huggingface.co/spaces/betterwithage/szl-command-centre/tree/2b951ce7e1ed5c5f78e97fae8c087bd49c16d625/archive/governed-receipt-verifier), as recorded by the [immutable consolidation receipt](https://huggingface.co/spaces/betterwithage/szl-command-centre/blob/2b951ce7e1ed5c5f78e97fae8c087bd49c16d625/HF_SPACE_CONSOLIDATION_FINAL_RECEIPT.json). The archived browser entrypoint loads a separate `verify.js`; it does not run this `verify.py` or `governed_action.py`. Archive availability is not a deployed-source binding, consumer-conformance result, or functional receipt-verification witness. Use the offline commands above for this repository's verifier.
+
+The stdlib-only [`governed_action.py`](governed_action.py) separately validates the proposed [GovernedAction predicate profile](docs/ITE-9-governed-action-predicate-proposal.md). Its `PASS` establishes structural/profile conformance, not signature authenticity, token authorization, artifact-byte correspondence, or deployment readiness. No automatic integration of that validator into the archived browser consumer or the product websites is claimed.
+
+For replayable conformance testing, use **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled negatives (must FAIL), each with a declared expected outcome for a pinned verifier revision. `python scripts/replay_bench.py --revision <dataset-commit>` replays it, and the `bench-replay` workflow does so on every push and PR.
 
 ---
 
@@ -117,7 +121,7 @@ It exits non-zero if any fixture's outcome differs from `bench.jsonl`. CI pins t
 
 ## The estate
 
-- **Live verifier Space:** **[`SZLHOLDINGS/governed-receipt-verifier`](https://huggingface.co/spaces/SZLHOLDINGS/governed-receipt-verifier)** — paste a receipt, verify it in your browser (runs this `verify.py` via Pyodide).
+- **Archived browser prototype:** [preserved governed-receipt-verifier files](https://huggingface.co/spaces/betterwithage/szl-command-centre/tree/2b951ce7e1ed5c5f78e97fae8c087bd49c16d625/archive/governed-receipt-verifier) — separate JavaScript consumer, not a live standalone Space or verified deployment of this repository's Python validators.
 - **Benchmark corpus:** **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (PASS) + labeled negatives (FAIL) for conformance testing, replayed in CI.
 - Live console: **[a-11-oy.com](https://a-11-oy.com)** · a11oy console `szlholdings-a11oy.hf.space`
 - Hugging Face org: **[SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS)** — receipt datasets (`a11oy-verifiable-corpus`, `readiness-runs`, `szl-evidence`) and the **Governed Kernels** collection (`szl-lambda-gate`, `szl-blocked`, `governed-inference-meter`, …).
