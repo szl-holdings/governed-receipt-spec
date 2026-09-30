@@ -1,0 +1,385 @@
+{
+  "format": "GovernedActionConformance/v1",
+  "synthetic": true,
+  "verification_time": "2026-09-19T00:00:00Z",
+  "cases": [
+    {
+      "id": "predicate-complete",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "statement-complete",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v1\",\"subject\":[{\"digest\":{\"sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}}],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "denied-action-structurally-valid",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"DENY\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "unknown-digest-extension",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v1\",\"subject\":[{\"digest\":{\"custom-reference\":\"immutable-ref\"}}],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "finite-annotations",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v1\",\"subject\":[{\"digest\":{\"sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"},\"annotations\":{\"value\":1.25,\"unicode\":\"é / 🦙\"}}],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "explicit-offset-equivalence",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-19T01:00:00+01:00\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "missing-optional-digest-list",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "PASS"
+      }
+    },
+    {
+      "id": "unsatisfied-incomplete",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":false,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"INCOMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "clock-evidence-incomplete",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":false}}",
+      "expected": {
+        "stage": "validate",
+        "state": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "ntp-evidence-alone-incomplete",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":false,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "token-evidence-alone-incomplete",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true}}",
+      "expected": {
+        "stage": "validate",
+        "state": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "empty-subject-incomplete",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v1\",\"subject\":[],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "INCOMPLETE"
+      }
+    },
+    {
+      "id": "obligations-text",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":\"wrong\",\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "obligations-null",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":null,\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "obligations-object",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":{},\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "obligations-boolean",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":false,\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "obligation-scalar-entry",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[false],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "artifact-digests-text",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "artifact-digests-number",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":42}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "artifact-digests-null",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":null}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "digest-boolean-entry",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[true]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "digest-uppercase",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "satisfied-numeric",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":1,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "false-complete-claim",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":false,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "completeness-boolean",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":true},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "human-api-key-spoof",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"api_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "naive-timestamp",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "fractional-future-timestamp",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-19T00:00:00.0000001Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "ntp-numeric",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":1,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "redaction-without-commitments",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"},\"context\":{\"redacted\":true}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "subject-digest-scalar",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v1\",\"subject\":[{\"digest\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "wrong-predicate-type",
+      "mode": "statement",
+      "input_json": "{\"_type\":\"https://in-toto.io/Statement/v1\",\"predicateType\":\"https://szl.dev/GovernedAction/v2\",\"subject\":[{\"digest\":{\"sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\"}}],\"predicate\":{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}}",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "duplicate-ntp-false-first",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":false,\"ntp_synced\":true,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "duplicate-ntp-true-first",
+      "mode": "predicate",
+      "input_json": "{\"action\":{\"type\":\"synthetic.audit\",\"description\":\"Synthetic conformance fixture; not a real action\"},\"principal\":{\"type\":\"human\",\"id\":\"synthetic-human\",\"is_service_account\":false,\"auth_method\":\"hardware_key\"},\"authority\":{\"outcome\":\"ALLOW\",\"evaluated_before_execution\":true,\"policy_ref\":\"synthetic-policy\"},\"side_effect_class\":\"READ_ONLY\",\"evidence\":{\"obligations\":[{\"id\":\"fixture\",\"satisfied\":true,\"artifact_digests\":[\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]}],\"completeness\":\"COMPLETE\"},\"timestamp\":{\"utc\":\"2026-09-18T23:59:59Z\",\"ntp_synced\":true,\"ntp_synced\":false,\"rfc3161_token\":\"synthetic-assertion-not-a-verified-token\"}}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "escaped-duplicate-member",
+      "mode": "predicate",
+      "input_json": "{\"a\":1,\"\\u0061\":2}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "nonfinite-nan",
+      "mode": "predicate",
+      "input_json": "{\"value\":NaN}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "nonfinite-positive",
+      "mode": "predicate",
+      "input_json": "{\"value\":Infinity}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "nonfinite-negative",
+      "mode": "predicate",
+      "input_json": "{\"value\":-Infinity}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "nonfinite-overflow",
+      "mode": "predicate",
+      "input_json": "{\"value\":1e10000}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "unpaired-unicode",
+      "mode": "predicate",
+      "input_json": "{\"value\":\"\\ud800\"}",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "truncated-json",
+      "mode": "predicate",
+      "input_json": "{\"action\":",
+      "expected": {
+        "stage": "parse",
+        "state": "FAIL"
+      }
+    },
+    {
+      "id": "scalar-predicate",
+      "mode": "predicate",
+      "input_json": "false",
+      "expected": {
+        "stage": "validate",
+        "state": "FAIL"
+      }
+    }
+  ]
+}

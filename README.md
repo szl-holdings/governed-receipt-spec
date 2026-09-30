@@ -84,6 +84,8 @@ Without `--verify-key` the signature check is reported as `SKIP` — never as a 
 
 The stdlib-only [`governed_action.py`](governed_action.py) separately validates the proposed [GovernedAction predicate profile](docs/ITE-9-governed-action-predicate-proposal.md). Its `PASS` establishes structural/profile conformance, not signature authenticity, token authorization, artifact-byte correspondence, or deployment readiness. No automatic integration of that validator into the archived browser consumer or the product websites is claimed.
 
+For portable **synthetic GovernedAction/v1** malformed-input tests, run `python scripts/replay_governed_conformance.py`. The [raw-JSON corpus and adapter-result contract](conformance/README.md) use a fixed clock, explicit validator mode, typed parse/validation outcomes and exact byte/hash bindings. The offline comparator rejects partial or ambiguous adapter reports; comparison alone does not prove an adapter executed or a consumer deployed the validator. This is separate from the real receipt/chain benchmark below.
+
 For replayable conformance testing, use **[`SZLHOLDINGS/governed-receipts-bench`](https://huggingface.co/datasets/SZLHOLDINGS/governed-receipts-bench)** — real receipts (must PASS) plus labeled negatives (must FAIL), each with a declared expected outcome for a pinned verifier revision. `python scripts/replay_bench.py --revision <dataset-commit>` replays it, and the `bench-replay` workflow does so on every push and PR.
 
 ---
