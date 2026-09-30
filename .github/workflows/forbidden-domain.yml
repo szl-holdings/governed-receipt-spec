@@ -39,6 +39,12 @@ jobs:
           test "$actual" = "$SOURCE_REVISION"
           echo "exact source verified: $actual"
 
+      - name: Install policy scanner
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ripgrep
+          rg --version
+
       - name: Scan for forbidden domain references
         shell: bash
         run: |
