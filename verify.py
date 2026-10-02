@@ -46,8 +46,11 @@ import argparse
 import base64
 import hashlib
 import json
+import math
 import os
 import re
+
+import governed_action as strict_json
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
@@ -56,6 +59,7 @@ from in_toto_attestation.v1.resource_descriptor import ResourceDescriptor
 from in_toto_attestation.v1.statement import STATEMENT_TYPE_URI, Statement
 
 ZERO_HASH = "0" * 64
+MAX_JSON_INTEGER_DIGITS = 4300  # Match the supported Python strict-text boundary.
 IN_TOTO_STATEMENT_TYPE = STATEMENT_TYPE_URI
 IN_TOTO_PAYLOAD_TYPE = "application/vnd.in-toto+json"
 DEFAULT_SCHEMA = os.path.join(
@@ -85,7 +89,7 @@ def _type_ok(value, t):
     if t == "integer":
         return isinstance(value, int) and not isinstance(value, bool)
     if t == "number":
-        return isinstance(value, (int, float)) and not isinstance(value, bool)
+        return type(value) is int or (type(value) is float and math.isfinite(value))
     if t == "boolean":
         return isinstance(value, bool)
     if t == "null":
@@ -188,44 +192,58 @@ def validate(value, schema, root=None, path="$", errors=None):
 # --------------------------------------------------------------------------- #
 # Receipt loading & shape extraction                                          #
 # --------------------------------------------------------------------------- #
+def _read_json_text(path):
+    """Bound bytes before decoding; never reflect receipt contents in errors."""
+    with open(path, "rb") as fh:
+        raw = fh.read(strict_json.MAX_JSON_TEXT_BYTES + 1)
+    if len(raw) > strict_json.MAX_JSON_TEXT_BYTES:
+        raise strict_json.MalformedJSON("JSON byte limit exceeded")
+    try:
+        return raw.decode("utf-8")
+    except UnicodeError:
+        raise strict_json.MalformedJSON("invalid JSON UTF-8") from None
+
+
 def load_records(path):
     """Load one path into a list of top-level records.
 
     Supports a single JSON object, a JSON array, or NDJSON (one JSON per line).
     """
-    with open(path, "r", encoding="utf-8") as fh:
-        text = fh.read()
+    text = _read_json_text(path)
     text_stripped = text.strip()
     if not text_stripped:
         return []
     try:
-        data = json.loads(text_stripped)
+        data = strict_json.parse_json_document(text_stripped)
         return data if isinstance(data, list) else [data]
-    except json.JSONDecodeError:
+    except strict_json.MalformedJSON:
         records = []
         for line in text_stripped.splitlines():
             line = line.strip()
             if line:
-                records.append(json.loads(line))
+                records.append(strict_json.parse_json_document(line))
+        # NDJSON must not bypass the aggregate nesting/work/text bounds.
+        reason = strict_json._json_error(records, "records")
+        if reason:
+            raise strict_json.MalformedJSON(reason)
         return records
 
 
 def _find_envelope(record):
     """Locate the DSSE / signed envelope inside a record, if any."""
     if isinstance(record, dict):
-        if "payloadType" in record and "payload" in record and isinstance(
-            record.get("payload"), str
-        ):
+        # Explicit declarations must reach validation, even when malformed.
+        if "payloadType" in record:
             return record
         payload = record.get("payload")
         if isinstance(payload, dict):
             for key in ("envelope", "dsse"):
                 env = payload.get(key)
-                if isinstance(env, dict) and "payloadType" in env:
+                if isinstance(env, dict):
                     return env
         for key in ("envelope", "dsse"):
             env = record.get(key)
-            if isinstance(env, dict) and "payloadType" in env:
+            if isinstance(env, dict):
                 return env
     return None
 
@@ -234,11 +252,11 @@ def _decode_envelope_payload(envelope):
     try:
         raw = base64.b64decode(envelope["payload"], validate=True)
     except Exception as exc:  # noqa: BLE001
-        return None, "payload is not valid base64 (%s)" % exc
+        return None, "payload is not valid base64 (%s)" % type(exc).__name__
     try:
-        return json.loads(raw.decode("utf-8")), None
+        return strict_json.parse_json_document(raw.decode("utf-8")), None
     except Exception as exc:  # noqa: BLE001
-        return None, "decoded payload is not valid JSON (%s)" % exc
+        return None, "decoded payload is not valid JSON (%s)" % type(exc).__name__
 
 
 def extract_decision(record, envelope):
@@ -310,33 +328,56 @@ def _intoto_statement_errors(statement):
     """
     if not isinstance(statement, dict):
         return ["statement is not an object"]
+    if statement.get("_type") != IN_TOTO_STATEMENT_TYPE:
+        return ["statement-ite6-invalid: _type must be Statement/v1"]
+    if not isinstance(statement.get("subject"), list):
+        return ["statement-ite6-invalid: subject must be a list"]
+    if not isinstance(statement.get("predicateType"), str):
+        return ["statement-ite6-invalid: predicateType must be a string"]
+    if not isinstance(statement.get("predicate"), dict):
+        return ["statement-ite6-invalid: predicate must be an object"]
     try:
         subjects = statement.get("subject")
         descriptors = []
-        for index, subject in enumerate(subjects if isinstance(subjects, list) else []):
+        for index, subject in enumerate(subjects):
             if not isinstance(subject, dict):
-                return ["subject %d is not an object" % index]
+                return ["statement-ite6-invalid: subject %d is not an object" % index]
             name = subject.get("name")
             digest = subject.get("digest")
+            for field in ("name", "uri", "mediaType", "downloadLocation", "content"):
+                if field in subject and not isinstance(subject[field], str):
+                    return ["statement-ite6-invalid: subject %d %s must be a string" % (index, field)]
+            if "annotations" in subject and not isinstance(subject["annotations"], dict):
+                return ["statement-ite6-invalid: subject %d annotations must be an object" % index]
+            if not isinstance(digest, dict) or any(
+                not isinstance(k, str) or not k or not isinstance(v, str) or not v
+                for k, v in digest.items()
+            ):
+                return ["statement-ite6-invalid: subject %d digest must map non-empty strings to non-empty strings" % index]
+            try:
+                content = base64.b64decode(subject.get("content", ""), validate=True)
+            except (ValueError, UnicodeError):
+                return ["statement-ite6-invalid: subject %d content must be strict base64" % index]
             descriptor = ResourceDescriptor(
-                name=name if isinstance(name, str) else "",
-                digest=(
-                    {str(k): str(v) for k, v in digest.items()}
-                    if isinstance(digest, dict)
-                    else {}
-                ),
+                name=name if name is not None else "",
+                uri=subject.get("uri", ""),
+                digest=digest,
+                content=content,
+                download_location=subject.get("downloadLocation", ""),
+                media_type=subject.get("mediaType", ""),
+                annotations=subject.get("annotations"),
             )
             descriptor.validate()
             descriptors.append(descriptor.pb)
         predicate = statement.get("predicate")
         stmt = Statement(
             subjects=descriptors,
-            predicate_type=statement.get("predicateType") or "",
-            predicate=dict(predicate) if isinstance(predicate, dict) else {},
+            predicate_type=statement["predicateType"],
+            predicate=predicate,
         )
         stmt.validate()
-    except (ValueError, TypeError) as exc:
-        return ["statement-ite6-invalid: %s" % exc]
+    except (ValueError, TypeError, OverflowError) as exc:
+        return ["statement-ite6-invalid: conversion rejected (%s)" % type(exc).__name__]
     return []
 
 
@@ -345,8 +386,9 @@ def check_intoto_statement(envelope):
     if envelope is None:
         return True, "no envelope to check (n/a)"
     ptype = envelope.get("payloadType")
+    media_type = ptype.split(";", 1)[0].strip().lower() if isinstance(ptype, str) else ""
     decoded, err = _decode_envelope_payload(envelope)
-    is_intoto = ptype == IN_TOTO_PAYLOAD_TYPE or (
+    is_intoto = media_type == IN_TOTO_PAYLOAD_TYPE or (
         isinstance(decoded, dict) and decoded.get("_type") == IN_TOTO_STATEMENT_TYPE
     )
     if not is_intoto:
@@ -431,7 +473,10 @@ def check_content_hash(record, envelope):
         ptype = envelope.get("payloadType", "")
         # DSSE PAE hash
         if "_pae_sha256" in envelope:
-            got = hashlib.sha256(dsse_pae(ptype, body)).hexdigest()
+            try:
+                got = hashlib.sha256(dsse_pae(ptype, body)).hexdigest()
+            except (ValueError, TypeError, UnicodeError) as exc:
+                return False, "cannot reconstruct content-hash PAE (%s)" % type(exc).__name__
             want = envelope["_pae_sha256"]
             if got != want:
                 return False, ("DSSE PAE sha256 mismatch: recomputed %s != _pae_sha256 %s"
@@ -469,6 +514,12 @@ def check_dsse_structure(envelope):
             base64.b64decode(envelope["payload"], validate=True)
         except Exception:  # noqa: BLE001
             problems.append("payload not base64-decodable")
+    if isinstance(ptype, str):
+        media_type = ptype.split(";", 1)[0].strip().lower()
+        if media_type == "application/json" or media_type.endswith("+json"):
+            _decoded, error = _decode_envelope_payload(envelope)
+            if error:
+                problems.append(error)
     sigs = envelope.get("signatures")
     if not isinstance(sigs, list):
         problems.append("signatures missing/not a list")
@@ -574,7 +625,7 @@ def check_clear_claim_binding(record, envelope, schema):
             and clear["receipt_uid"] == envelope_pae_sha256
         )
         dataset_role = (
-            clear.get("kind") in {"receipt", "lake_receipt"}
+            clear.get("kind") in ("receipt", "lake_receipt")
             and clear.get("schema") == "szl.hf.bucket.record/v1"
             and clear.get("source") == "a11oy"
             and isinstance(clear.get("id"), str)
@@ -653,6 +704,31 @@ def check_chain(decisions):
 # --------------------------------------------------------------------------- #
 # Top-level verification                                                       #
 # --------------------------------------------------------------------------- #
+def _integer_text_error(records):
+    """After strict-JSON validation, bound integer formatting without hooks.
+
+    Direct Python callers can supply ints larger than the parser accepts. A
+    cheap bit bound precedes decimal conversion so failure reports cannot
+    raise Python's integer-string-limit exception or do unbounded work.
+    """
+    pending = [records]
+    while pending:
+        item = pending.pop()
+        if type(item) is dict:
+            pending.extend(item.values())
+        elif type(item) is list:
+            pending.extend(item)
+        elif type(item) is int:
+            if item.bit_length() > MAX_JSON_INTEGER_DIGITS * 4:
+                return "JSON integer exceeds supported decimal text limit"
+            try:
+                if len(str(abs(item))) > MAX_JSON_INTEGER_DIGITS:
+                    return "JSON integer exceeds supported decimal text limit"
+            except ValueError:
+                return "JSON integer exceeds supported decimal text limit"
+    return None
+
+
 def verify_records(records, schema, public_key_pem=None):
     """Return (ok, report_lines) for the selected verification mode.
 
@@ -660,14 +736,32 @@ def verify_records(records, schema, public_key_pem=None):
     With a key, ok also requires verified signatures on every record. Neither
     mode establishes signer trust, authorization, or correctness of execution.
     """
+    reason = strict_json._json_error(records, "records")
+    if reason:
+        return False, ["- records: FAIL malformed input: %s" % reason]
+    reason = _integer_text_error(records)
+    if reason:
+        return False, ["- records: FAIL malformed input: %s" % reason]
+    if type(records) is not list:
+        return False, ["- records: FAIL expected a list of receipt records"]
     if not records:
         return False, ["- records: FAIL no receipt records found"]
 
     lines = []
     ok = True
     decisions = []
+    invalid_decision = False
     for idx, record in enumerate(records):
         tag = "receipt[%d]" % idx
+        if isinstance(record, dict):
+            wrappers = (record, record.get("payload"))
+            if any(key in wrapper and not isinstance(wrapper[key], dict)
+                   for wrapper in wrappers if isinstance(wrapper, dict)
+                   for key in ("dsse", "envelope")):
+                ok = False
+                invalid_decision = True
+                lines.append("- %s: FAIL declared DSSE/envelope must be an object" % tag)
+                continue
         envelope = _find_envelope(record)
         decision, note = extract_decision(record, envelope)
         lines.append("- %s: %s" % (tag, note))
@@ -676,10 +770,19 @@ def verify_records(records, schema, public_key_pem=None):
         s_ok, s_msg = check_dsse_structure(envelope)
         ok = ok and s_ok
         lines.append("    dsse:   %s %s" % ("PASS" if s_ok else "FAIL", s_msg))
+        if not s_ok:
+            invalid_decision = True
+            # Raw-byte diagnostics cannot erase the envelope failure.
+            h_ok, h_msg = check_content_hash(record, envelope)
+            lines.append("    hash:   %s %s" % ("PASS" if h_ok else "FAIL", h_msg))
+            lines.append("    checks: SKIP malformed envelope interpretation; failure retained")
+            continue
 
         # (e) in-toto Statement ITE-6 validation (in-toto payloads only)
         t_ok, t_msg = check_intoto_statement(envelope)
         ok = ok and t_ok
+        if not t_ok:
+            invalid_decision = True
         lines.append("    intoto: %s %s" % ("PASS" if t_ok else "FAIL", t_msg))
 
         # (f) cryptographic signature verification (SKIP without --verify-key)
@@ -709,10 +812,14 @@ def verify_records(records, schema, public_key_pem=None):
                 lines.append("    schema: FAIL")
                 for e in errs:
                     lines.append("            - %s" % e)
-            decisions.append(decision)
+            if v_ok:
+                decisions.append(decision)
+            else:
+                invalid_decision = True
         else:
             if envelope is None:
                 ok = False
+                invalid_decision = True
                 lines.append("    schema: FAIL unsupported record has no "
                              "inference decision or DSSE envelope")
             else:
@@ -720,7 +827,10 @@ def verify_records(records, schema, public_key_pem=None):
                              "(envelope + hash checks only)")
 
     # (c) chain across inference receipts
-    c_ok, c_msgs = check_chain(decisions)
+    if invalid_decision:
+        c_ok, c_msgs = False, ["malformed receipt prevents complete chain verification"]
+    else:
+        c_ok, c_msgs = check_chain(decisions)
     ok = ok and c_ok
     for m in c_msgs:
         lines.append("- chain: %s %s" % ("PASS" if c_ok else "FAIL", m))
@@ -728,13 +838,18 @@ def verify_records(records, schema, public_key_pem=None):
 
 
 def verify_file(path, schema, public_key_pem=None):
-    records = load_records(path)
+    try:
+        records = load_records(path)
+    except (OSError, strict_json.MalformedJSON) as exc:
+        return False, ["- records: FAIL input unreadable or malformed (%s)" % type(exc).__name__]
     return verify_records(records, schema, public_key_pem)
 
 
 def load_schema(path):
-    with open(path, "r", encoding="utf-8") as fh:
-        return json.load(fh)
+    schema = strict_json.parse_json_document(_read_json_text(path))
+    if not isinstance(schema, dict):
+        raise strict_json.MalformedJSON("schema must be a JSON object")
+    return schema
 
 
 def main(argv=None):
@@ -755,7 +870,12 @@ def main(argv=None):
     )
     args = parser.parse_args(argv)
 
-    schema = load_schema(args.schema)
+    try:
+        schema = load_schema(args.schema)
+    except (OSError, strict_json.MalformedJSON) as exc:
+        print("FAIL schema unreadable or malformed (%s)" % type(exc).__name__)
+        print("OVERALL: FAIL")
+        return 1
     public_key_pem = None
     if args.verify_key:
         try:
