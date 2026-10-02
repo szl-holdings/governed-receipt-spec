@@ -90,6 +90,32 @@ are not assessed. Any failed check produces a non-zero exit status.
 
 > Honesty note: the verifier does **not** re-derive the runtime's internal `digest` serialization (that is internal to the emitting runtime). It verifies the relations an outside party can independently reproduce — the DSSE PAE content hash, the payload-bytes hash, the `prev ↔ digest` chain, and (with a public key) the envelope signature. The same signatures also verify upstream with `cosign verify-blob --key cosign.pub`; the public key is linked from each receipt's `verify_key_url` and vendored for offline use at `tests/fixtures/cosign.pub`.
 
+**Strict input boundary:** receipt files, NDJSON and declared-JSON DSSE payloads
+reject duplicate members (including escaped aliases), non-finite numbers,
+invalid Unicode and excessive nesting/work before interpretation. The existing
+stdlib parser in `governed_action.py` supplies the shared bounds: 4 MiB of UTF-8
+file bytes, depth 64 (root depth zero), 100,000 value occurrences and 4 MiB of
+aggregate string/key bytes. Receipt integers are additionally bounded to 4,300
+decimal digits before numeric diagnostics (a stricter interpreter setting can
+reject them sooner). NDJSON is checked in aggregate too. Python receipt
+callers receive `(False, reason_lines)` for malformed builtin-JSON values,
+including malformed chain fields and in-toto conversion overflow, instead of
+an escaping type exception. Custom Python objects/subclasses are rejected
+without invoking their hooks. A collapsed dictionary cannot reveal duplicate
+members: use `verify_file` or parse raw text with
+`governed_action.parse_json_document` before `verify_records`.
+
+In-toto fields retain their original types; digest values are not stringified
+into apparently valid evidence. Opaque non-JSON DSSE payloads still support
+raw-byte integrity/signature checks, without a JSON interpretation claim.
+Hash/signature validity does not authorize malformed declared JSON. Malformed
+receipts cannot inherit a complete-chain PASS from a filtered subset.
+The refreshed [current-source qualification](conformance/current-verifier-qualification.json)
+binds both Python source modules and records only the fixture checks actually
+executed. The [previous qualification](conformance/pr29-verifier-qualification.json)
+is preserved unchanged for its original source; neither is a fresh data-analysis,
+provider-publication or deployment witness.
+
 **Browser consumer status:** the former `SZLHOLDINGS/governed-receipt-verifier` standalone Space was retired and its files preserved in the [Command Centre archive](https://huggingface.co/spaces/betterwithage/szl-command-centre/tree/2b951ce7e1ed5c5f78e97fae8c087bd49c16d625/archive/governed-receipt-verifier), as recorded by the [immutable consolidation receipt](https://huggingface.co/spaces/betterwithage/szl-command-centre/blob/2b951ce7e1ed5c5f78e97fae8c087bd49c16d625/HF_SPACE_CONSOLIDATION_FINAL_RECEIPT.json). The archived browser entrypoint loads a separate `verify.js`; it does not run this `verify.py` or `governed_action.py`. Archive availability is not a deployed-source binding, consumer-conformance result, or functional receipt-verification witness. Use the offline commands above for this repository's verifier.
 
 The stdlib-only [`governed_action.py`](governed_action.py) separately validates the proposed [GovernedAction predicate profile](docs/ITE-9-governed-action-predicate-proposal.md). Its `PASS` establishes structural/profile conformance, not signature authenticity, token authorization, artifact-byte correspondence, or deployment readiness. No automatic integration of that validator into the archived browser consumer or the product websites is claimed.

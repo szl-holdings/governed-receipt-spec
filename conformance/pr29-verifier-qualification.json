@@ -2,10 +2,9 @@
   "schema": "current-verifier-qualification/v1",
   "scope": "current verifier on retained public fixtures; no data-analysis rerun or signer-trust claim",
   "source_sha256": {
-    "verify.py": "7c3eb7e8702751ffad6c968ec719a8b265d03c300e85f5e417a8df4cb7d5c42d",
-    "governed_action.py": "9c96e566e192e4c9b3a39bc39159d656869480907f6545c3f15e616341f0ce5b",
+    "verify.py": "468fce721a0c1bc558b3d535b15478828f41988f73b2fb6b5bc717c849a5a828",
     "schema/governed-receipt.schema.json": "d894c805306f47daaaed80cd2c01b086aabadc3cd9f14f2d6c892cc6a843c141",
-    "scripts/qualify_current_verifier.py": "d2189161f766c065d66d58e5c048b97de89708472a8b32ff1ca1e21eb6b79a30",
+    "scripts/qualify_current_verifier.py": "b64023ff4a3e88fc1cb823a44c012dfb67cd1ea0eb8ae76751eb8e676913f7a8",
     "examples/public-single-cell/observed-run.json": "0f9d8446925b6c694491382c8f445004fa5645691336578249348d50bd4b3fa4",
     "examples/a11oy-khipu-chain.json": "21e53e51f27175d2bc7ea780a4a83e4b448c04b2a9b9359fd60b25fe166e7a6e",
     "tests/fixtures/cosign.pub": "c8c5e82330590f3ee04e75350e345704e4b69df3000cc211e4e18fb0ea8854ad",
@@ -160,6 +159,7 @@
         "SKIP",
         "SKIP",
         "SKIP",
+        "SKIP",
         "SKIP"
       ],
       "report": [
@@ -177,10 +177,13 @@
         "    hash:   PASS DSSE PAE sha256 verified (6cb72a1f750705b5)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
         "    schema: PASS validates governed-receipt.schema.json",
-        "- receipt[2]: decoded payload is not valid JSON (MalformedJSON)",
-        "    dsse:   FAIL decoded payload is not valid JSON (MalformedJSON)",
+        "- receipt[2]: decoded payload is not valid JSON (Invalid control character at: line 1 column 202 (char 201))",
+        "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
+        "    intoto: PASS not an in-toto Statement payload (n/a)",
+        "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   FAIL DSSE PAE sha256 mismatch: recomputed 5cf591a1e48b98556ef7f64c3c754b8550733d3c8b699dd41d227b6a591bb0fb != _pae_sha256 51fa00836c15637576c0292362ace458ec50ababe8b151127787b87c4aba61ce",
-        "    checks: SKIP malformed envelope interpretation; failure retained",
+        "    bind:   FAIL cannot bind clear claims: decoded payload is not valid JSON (Invalid control character at: line 1 column 202 (char 201))",
+        "    schema: SKIP non-inference receipt (envelope + hash checks only)",
         "- receipt[3]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
         "    intoto: PASS not an in-toto Statement payload (n/a)",
@@ -195,7 +198,8 @@
         "    hash:   PASS DSSE PAE sha256 verified (6d14b760273e2b3a)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
         "    schema: PASS validates governed-receipt.schema.json",
-        "- chain: FAIL malformed receipt prevents complete chain verification"
+        "- chain: FAIL seq 3 prev f4105c39b7f86f39d58f27698825c1a93aafdc4baffaf2ede300cd3ab4ea1996 != seq 1 digest 7b38bc2963633b8e175313a20a6b9750c800eb8abca4ec30bbbdb625773a19c2",
+        "- chain: FAIL seq not contiguous: 3 follows 1"
       ]
     },
     {
@@ -268,14 +272,14 @@
     }
   ],
   "execution": {
-    "observed_at_utc": "2026-10-02T01:13:59.461599+00:00",
+    "observed_at_utc": "2026-09-30T16:08:39.024573+00:00",
     "command": [
       "python",
       "scripts/qualify_current_verifier.py",
       "--output",
-      "C:/Users/steph/Documents/Codex/2026-08-11/prior-conversation-with-codex-conversation-role-7/outputs/receipt-boundary-20261001/current-verifier-qualification-final-v2.json"
+      "conformance/current-verifier-qualification.json"
     ],
-    "python": "3.11.9",
+    "python": "3.12.14",
     "platform": "Windows",
     "packages": {
       "cryptography": "50.0.1",

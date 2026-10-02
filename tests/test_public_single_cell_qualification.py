@@ -20,6 +20,7 @@ class CurrentQualificationTests(unittest.TestCase):
         current.check_retained(retained, current.qualify())
         self.assertEqual(retained["execution"]["historical_data_analysis_rerun"], "NOT_RUN")
         self.assertEqual(retained["execution"]["private_key_generation"], "NOT_RUN")
+        self.assertIn("governed_action.py", retained["source_sha256"])
 
     def test_source_drift_missing_cases_and_positive_claim_changes_fail(self):
         observed = current.qualify()

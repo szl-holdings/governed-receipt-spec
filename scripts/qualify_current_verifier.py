@@ -18,7 +18,7 @@ HISTORICAL = "examples/public-single-cell/observed-run.json"
 CHAIN = "examples/a11oy-khipu-chain.json"
 PUBLIC_KEY = "tests/fixtures/cosign.pub"
 SOURCES = (
-    "verify.py", "schema/governed-receipt.schema.json",
+    "verify.py", "governed_action.py", "schema/governed-receipt.schema.json",
     "scripts/qualify_current_verifier.py", HISTORICAL, CHAIN, PUBLIC_KEY,
     "examples/public-single-cell/run_example.py",
     "examples/public-single-cell/reproduction-profile.json",
