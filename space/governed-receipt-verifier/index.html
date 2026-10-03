@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Governed receipt verifier status | SZL Holdings</title>
+  <meta name="description" content="The browser verifier is blocked. Use the maintained offline Python verifier.">
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { background: #0a0e14; color: #e6edf3; line-height: 1.6; margin: 0; }
+    main { max-width: 48rem; margin: 4rem auto; padding: 0 1.5rem; }
+    .status { color: #f2b6b0; font-weight: 700; letter-spacing: .08em; }
+    a { color: #3af4c8; }
+    code { background: #18212b; padding: .15rem .3rem; }
+    .panel { border: 1px solid #334354; border-radius: .75rem; padding: 1.5rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="status">BLOCKED · NO VERIFICATION PERFORMED</p>
+    <h1>Browser receipt verification is unavailable</h1>
+    <div class="panel">
+      <p>This page does not accept receipts or issue verification results. The
+      former browser prototype could report PASS without checking claimed
+      hashes or cryptographic signatures. Do not use its earlier verdicts as
+      evidence of integrity, signer identity, or authorization.</p>
+      <p>Use the maintained
+      <a href="https://github.com/szl-holdings/governed-receipt-spec">offline Python verifier</a>
+      for receipt checks. Its README gives the installation and command-line
+      steps. Supply a public key you obtained and trust independently to check
+      signatures; without one, signature authentication is skipped.</p>
+    </div>
+    <p>Source for this informational page:
+    <a href="https://github.com/szl-holdings/governed-receipt-spec/tree/main/space/governed-receipt-verifier"><code>space/governed-receipt-verifier/</code></a>.</p>
+  </main>
+</body>
+</html>
