@@ -55,6 +55,20 @@ Classifications are `QUALIFIED_WITHIN_SCOPE`, `RESEARCH_ONLY`, `BLOCKED`, or
 `UNKNOWN`. The inspected study5 adapter is `BLOCKED`. Nothing in the register
 is enabled for production or paid inference.
 
+## Evidence chain `szl-science-evidence-chain/v1`
+
+Slots stay separate: `source`, `tests`, `publication`, `runtime`, `integrity`,
+and `authority`. A missing slot is `MISSING`. A digest, when present, is the
+full lowercase SHA-256. `observation_time` and `ui_refresh_time` are different
+fields. `stale` is `UNKNOWN` until the caller sets it.
+
+Recovery kinds are `MODELED_REPLAY`, `POSTURE_CORRECTION`, and
+`INDEPENDENTLY_VERIFIED`. A modeled replay and a posture correction do not
+repair infrastructure. A complete verified record can show before-state,
+detector, approval, action, after-state, source identity, and readback.
+`infrastructure_repaired` stays false and `repair_conclusion` stays
+`NOT_CONCLUDED`.
+
 ## Payment context
 
 Local tests validate Ed25519 `PAYMENT-CONTEXT` tokens against injected keys.
