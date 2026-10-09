@@ -1,0 +1,13 @@
+{
+  "format": "feature_by_cell_tsv",
+  "delimiter": "\t",
+  "accession": "SYNTHETIC-MATRIX-1",
+  "ercc_prefix": "ERCC-",
+  "normalization": "none",
+  "rights": {
+    "status": "reviewed",
+    "basis": "original synthetic table written for this example",
+    "redistribution": "allowed for this synthetic file only",
+    "customer_data": false
+  }
+}
