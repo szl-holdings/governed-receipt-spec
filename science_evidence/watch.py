@@ -58,6 +58,7 @@ class WatchList:
             "question": spec["question"],
             "source_id": spec["source_id"],
             "revision": spec["revision"],
+            "observed_release": None,
             "category": spec["category"],
             "blocker": spec["blocker"],
             "unblock_condition": spec["unblock_condition"],
@@ -129,7 +130,7 @@ class WatchList:
             return item
         changed = observation.get("release") != item["revision"]
         if changed:
-            item["revision"] = observation.get("release")
+            item["observed_release"] = observation.get("release")
             item["category"] = "CHANGE_REQUIRES_REVIEW"
             item["machine_state"] = "REVIEW_REQUIRED"
             item["review_state"] = "REVIEW_REQUIRED"
@@ -141,9 +142,10 @@ class WatchList:
         item["freshness"] = "CURRENT"
         if observation.get("condition_met"):
             item["condition_met"] = True
-            item["machine_state"] = "UNBLOCK_PENDING_REVIEW"
-            item["review_state"] = "REVIEW_OUTSTANDING"
             item["scientific_validity"] = "NOT_ESTABLISHED"
+            if not changed:
+                item["machine_state"] = "UNBLOCK_PENDING_REVIEW"
+                item["review_state"] = "REVIEW_OUTSTANDING"
         self._event(item, event_id, "OBSERVED", observed_at, {
             "release_changed": changed,
             "condition_met": bool(observation.get("condition_met")),

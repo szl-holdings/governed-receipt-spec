@@ -42,7 +42,9 @@ Categories: `ACCESS_LIMITED`, `COVERAGE_MISSING`, `POWER_INADEQUATE`,
 `CHANGE_REQUIRES_REVIEW`.
 
 `scientific_validity` stays `NOT_ESTABLISHED`. The software rejects a decision
-named `SCIENTIFICALLY_VALID`. Unavailable sources set `evidence_against_hypothesis`
+named `SCIENTIFICALLY_VALID`. A changed release is recorded as `observed_release`
+and does not replace the pinned `revision` or clear `REVIEW_REQUIRED`.
+Unavailable sources set `evidence_against_hypothesis`
 false. Failed, interrupted, and inaccessible checks do not advance
 `last_successfully_checked`. History is append-only. Customer items stay out of
 `public_projection` unless `publication_approved` is set.

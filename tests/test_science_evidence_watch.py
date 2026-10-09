@@ -60,7 +60,19 @@ class WatchTests(unittest.TestCase):
         watch.observe("GAP-1", observation(event_id="obs-change", release="rev-b"))
         self.assertEqual(item["machine_state"], "REVIEW_REQUIRED")
         self.assertEqual(item["review_state"], "REVIEW_REQUIRED")
+        self.assertEqual(item["revision"], "rev-a")
+        self.assertEqual(item["observed_release"], "rev-b")
         self.assertNotEqual(item["scientific_validity"], "SCIENTIFICALLY_VALID")
+        watch.observe("GAP-1", observation(
+            event_id="obs-again",
+            observed_at="2026-10-09T02:00:00Z",
+            release="rev-b",
+            condition_met=True,
+        ))
+        self.assertEqual(item["revision"], "rev-a")
+        self.assertEqual(item["machine_state"], "REVIEW_REQUIRED")
+        self.assertEqual(item["review_state"], "REVIEW_REQUIRED")
+        self.assertEqual(item["scientific_validity"], "NOT_ESTABLISHED")
 
     def test_missing_source_is_unavailable_not_counterevidence(self) -> None:
         watch = WatchList()

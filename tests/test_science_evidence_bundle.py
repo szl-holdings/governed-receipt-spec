@@ -170,6 +170,8 @@ class BundleTests(unittest.TestCase):
             ("nul", b"c1\0\nG\t1\n", "RECORD_FRAMING"),
             ("plus_sign", b"c1\nG\t+1\n", "MALFORMED_NUMBER"),
             ("leading_zero", b"c1\nG\t01\n", "MALFORMED_NUMBER"),
+            ("negative_infinity", b"c1\nG\t-infinity\n", "NONFINITE_NUMBER"),
+            ("rights_basis_missing", b"c1\nG\t1\n", "MISSING_METADATA"),
             ("unreviewed", b"c1\nG\t1\n", "RIGHTS_UNREVIEWED"),
         ]
         self.assertGreaterEqual(len(cases), 24)
@@ -194,6 +196,8 @@ class BundleTests(unittest.TestCase):
                     kwargs["format"] = "mtx"
                 if name == "comma":
                     kwargs["delimiter"] = ","
+                if name == "rights_basis_missing":
+                    kwargs["rights"] = {"status": "reviewed", "basis": "", "redistribution": "synthetic file only"}
                 if name == "unreviewed":
                     kwargs["rights"] = {"status": "unknown", "basis": "none", "redistribution": "no"}
                 bundle = build_bundle(raw, request(**kwargs), AttemptBudget(2))

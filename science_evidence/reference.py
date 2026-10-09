@@ -70,7 +70,7 @@ def summarize(raw: bytes, request: dict) -> dict:
         for index, token in enumerate(fields[1:]):
             if token == "" or token.strip() == "" or token.strip() != token:
                 raise EvidenceStop("MISSING_MEASUREMENT", "blank measurement is not zero")
-            if token.lower() in {"nan", "inf", "+inf", "-inf", "infinity"}:
+            if token.lower() in {"nan", "inf", "+inf", "-inf", "infinity", "-infinity"}:
                 raise EvidenceStop("NONFINITE_NUMBER", token)
             if token.startswith("-"):
                 raise EvidenceStop("NEGATIVE_VALUE", token)
@@ -112,5 +112,7 @@ def _require_request(request: dict) -> None:
     rights = request.get("rights")
     if not isinstance(rights, dict) or rights.get("status") != "reviewed":
         raise EvidenceStop("RIGHTS_UNREVIEWED", "source rights have not been reviewed")
+    if not isinstance(rights.get("redistribution"), str) or not rights.get("basis"):
+        raise EvidenceStop("MISSING_METADATA", "rights basis and redistribution statement are required")
     if request.get("normalization", "none") != "none":
         raise EvidenceStop("UNSUPPORTED_FORMAT", "normalization is not applied")
