@@ -41,7 +41,7 @@ with sync_playwright() as p:
             targets=[]
             for link in page.locator('a:not(.skip-link)').all():
                 link.scroll_into_view_if_needed()
-                targets.append(link.evaluate('''e=>{const r=e.getBoundingClientRect();const x=r.left+Math.min(r.width/2,22),y=r.top+Math.min(r.height/2,22);const hit=document.elementFromPoint(x,y);return {text:e.innerText,width:r.width,height:r.height,hit:hit===e||e.contains(hit)}}'''))
+                targets.append(link.evaluate('''e=>{const r=e.getBoundingClientRect();const x=(Math.max(0,r.left)+Math.min(innerWidth,r.right))/2,y=(Math.max(0,r.top)+Math.min(innerHeight,r.bottom))/2;const hit=document.elementFromPoint(x,y);return {text:e.innerText,width:r.width,height:r.height,hit:hit===e||e.contains(hit)}}'''))
             checks['targets_44_and_hit']=all(t['width']>=44 and t['height']>=44 and t['hit'] for t in targets)
             page.evaluate('scrollTo(0,0)')
             page.locator('.skip-link').focus()
@@ -53,7 +53,8 @@ with sync_playwright() as p:
             checks['no_page_errors']=not errors
             checks['no_external_or_write_requests']=not writes and not external
             name=f'{width}-scale{scale}-forced{forced}-js{js}'
-            row={'name':name,'checks':checks,'targets':targets,'errors':errors,'writes':writes,'external':external}
+            overflow=page.evaluate('''() => [...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.width&& (r.left < -1 || r.right > innerWidth+1)}).map(e=>({tag:e.tagName,classes:e.className?.baseVal??e.className,text:e.innerText?.slice(0,80)}))''')
+            row={'name':name,'checks':checks,'targets':targets,'overflow_diagnostics':overflow,'errors':errors,'writes':writes,'external':external}
             report['cases'].append(row)
             report['failures'] += [name+':'+k for k,v in checks.items() if not v]
             if scale==1 and not forced and width in (320,1280) and js:
