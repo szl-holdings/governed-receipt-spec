@@ -1,0 +1,43 @@
+name: Browser receipt status
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+
+permissions:
+  contents: read
+
+jobs:
+  browser-status:
+    name: Informational page browser boundary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      SOURCE_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ env.SOURCE_REVISION }}
+      - name: Prove event source
+        run: test "$(git rev-parse HEAD)" = "$SOURCE_REVISION"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install isolated browser tooling
+        run: |
+          python -m pip install playwright==1.60.0
+          python -m playwright install --with-deps chromium
+      - name: Observe the candidate page with external traffic blocked
+        run: python scripts/qualify_browser_status.py --output browser-status-artifacts
+      - name: Preserve complete or incomplete observation
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # organization-approved immutable revision
+        with:
+          name: browser-status-${{ env.SOURCE_REVISION }}
+          path: browser-status-artifacts/
+          if-no-files-found: error
+          retention-days: 14

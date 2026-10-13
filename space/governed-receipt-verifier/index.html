@@ -1,37 +1,124 @@
 <!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0
+     Page code (c) 2026 SZL Holdings. Unmodified inline Orbit v2 artwork:
+     SZL Holdings, CC BY 4.0, szl-brand@4309f6fce89179331b0b3ed8c99494e76c5be256
+     kit/logos/orbit-v2/suite/szl-icon-32.svg
+     SHA-256 6e2b7d72a3af3d9602b79de41df0194ede6496a9661f057108ec224c0efc92e6
+     Selected KANCHAY 1.3.0 palette roles are projected in this single file;
+     no complete KANCHAY bundle installation or verifier qualification is claimed. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>Governed receipt verifier status | SZL Holdings</title>
-  <meta name="description" content="The browser verifier is blocked. Use the maintained offline Python verifier.">
+  <meta name="description" content="The browser verifier is blocked. Use the maintained offline Python verifier with a public key you trust independently.">
   <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
-    body { background: #0a0e14; color: #e6edf3; line-height: 1.6; margin: 0; }
-    main { max-width: 48rem; margin: 4rem auto; padding: 0 1.5rem; }
-    .status { color: #f2b6b0; font-weight: 700; letter-spacing: .08em; }
-    a { color: #3af4c8; }
-    code { background: #18212b; padding: .15rem .3rem; }
-    .panel { border: 1px solid #334354; border-radius: .75rem; padding: 1.5rem; }
+    :root { color-scheme:dark; font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      --bg:#080B12; --surface:#111722; --raised:#182232; --border:#2B3749;
+      --text:#F1F4F8; --sub:#AAB7C9; --ghost:#8B98AC; --link:#8fd9d5;
+      --focus:#34aaa4; --blocked:#f0a3a3; --coral:#DF735F; --navy:#030F29; }
+    * { box-sizing:border-box; }
+    html { scroll-padding-block:1.5rem; }
+    body { margin:0; background:var(--bg); color:var(--text); line-height:1.65; overflow-wrap:anywhere; }
+    a { color:var(--link); text-underline-offset:.22em; overflow-wrap:anywhere; }
+    a:hover { text-decoration-thickness:2px; }
+    a:focus-visible { outline:3px solid var(--focus); outline-offset:4px; }
+    .skip-link { position:fixed; top:16px; left:16px; max-width:calc(100% - 32px); z-index:10; padding:.75rem 16px;
+      background:var(--surface); border:1px solid var(--focus); transform:translateY(-200%); }
+    .skip-link:focus { transform:none; }
+    .wrap { width:min(100%,76rem); margin-inline:auto;
+      padding-inline:max(clamp(20px,4vw,32px),env(safe-area-inset-left),env(safe-area-inset-right)); }
+    header { border-bottom:1px solid var(--border); }
+    .header-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem 2rem; padding-block:1rem; }
+    .identity { display:inline-flex; align-items:center; gap:13px; min-height:48px; min-width:0; max-width:100%; color:var(--text); text-decoration:none; }
+    .identity svg { width:40px; height:40px; flex:0 0 40px; }
+    .identity span { font-weight:650; letter-spacing:-.025em; }
+    nav { display:flex; flex-wrap:wrap; gap:.25rem 1rem; min-width:0; max-width:100%; }
+    nav a,.source-link,footer a { display:inline-flex; align-items:center; min-height:44px; min-width:44px; padding:.5rem .1rem; }
+    main { padding-block:clamp(3rem,8vw,7rem) 4rem; }
+    .eyebrow { margin:0 0 1rem; color:var(--ghost); font:500 .75rem/1.6 ui-monospace,monospace; letter-spacing:.1em; text-transform:uppercase; }
+    h1 { max-width:15ch; margin:0; font-size:clamp(2.45rem,5.7vw,4.8rem); line-height:1.06; font-weight:500; letter-spacing:-.055em; overflow-wrap:anywhere; }
+    h2 { margin:0 0 1rem; font-size:clamp(1.3rem,2vw,1.65rem); line-height:1.25; font-weight:550; letter-spacing:-.025em; }
+    p { max-width:68ch; }
+    .lead { margin:1.5rem 0 2rem; max-width:48ch; color:var(--sub); font-size:1.15rem; }
+    .status { display:inline-flex; flex-wrap:wrap; align-items:center; gap:.5rem; margin:0 0 1.5rem; padding:.4rem .75rem;
+      background:var(--raised); border:1px solid var(--border); border-radius:4px; color:var(--blocked); font:600 .75rem/1.7 ui-monospace,monospace; letter-spacing:.035em; }
+    .layout { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:1.5rem; align-items:start; margin-top:3rem; }
+    .panel { min-width:0; padding:clamp(20px,3vw,32px); border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+    .foil { border-color:transparent; background:linear-gradient(var(--surface),var(--surface)) padding-box,
+      linear-gradient(128deg,#E9EEF6,#2B3749 25%,#5cc4bf 48%,#2B3749 72%,#E9EEF6) border-box; }
+    .panel p { color:var(--sub); margin:0 0 1rem; }
+    .panel p:last-child { margin-bottom:0; }
+    .panel strong { color:var(--text); font-weight:600; }
+    .actions { display:flex; flex-wrap:wrap; gap:.75rem; margin-top:1.5rem; }
+    .button { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:48px; max-width:100%; padding:.8rem 18px;
+      border:1px solid var(--coral); border-radius:6px; background:var(--coral); color:var(--navy); font-size:.95rem; font-weight:650; text-align:center; text-decoration:none; }
+    .button:hover { background:#F0917E; border-color:#F0917E; text-decoration:underline; }
+    .steps { list-style:none; counter-reset:step; margin:0; padding:0; }
+    .steps li { counter-increment:step; display:grid; grid-template-columns:1.8rem minmax(0,1fr); gap:.75rem; padding:1rem 0; border-top:1px solid var(--border); color:var(--sub); }
+    .steps li::before { content:counter(step,decimal-leading-zero); color:var(--ghost); font:500 .75rem/1.8 ui-monospace,monospace; }
+    .steps strong { display:block; margin-bottom:.25rem; }
+    .trust-note { margin:1.25rem 0 0; padding-top:1.25rem; border-top:1px solid var(--border); }
+    code { font-family:ui-monospace,monospace; font-size:.9em; color:var(--text); overflow-wrap:anywhere; }
+    footer { border-top:1px solid var(--border); color:var(--sub); padding-block:2rem; font-size:.875rem; }
+    footer .wrap { display:flex; flex-wrap:wrap; justify-content:space-between; gap:.5rem 2rem; }
+    footer p { min-width:0; max-width:100%; margin:0; }
+    @media(max-width:760px) { .layout { grid-template-columns:minmax(0,1fr); } .header-row { align-items:flex-start; } main { padding-block:3rem; } .steps li { grid-template-columns:minmax(0,1fr); gap:.25rem; } }
+    @media(max-width:380px) { .button { width:100%; } .identity span { font-size:.95rem; } }
+    @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation:none !important; transition:none !important; } }
+    @media(forced-colors:active) {
+      .panel,.foil,.status,.button,.skip-link { background:Canvas; color:CanvasText; border:1px solid CanvasText; }
+      a,a:hover { color:LinkText; } a:focus-visible { outline-color:Highlight; }
+      .button { color:ButtonText; border-color:ButtonText; }
+    }
   </style>
 </head>
 <body>
-  <main>
+  <a class="skip-link" href="#main">Skip to verifier status</a>
+  <header>
+    <div class="wrap header-row">
+      <a class="identity" href="https://a-11-oy.com" aria-label="SZL Holdings home"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-labelledby="szl-icon-32-title szl-icon-32-desc"><title id="szl-icon-32-title">SZL Holdings</title><desc id="szl-icon-32-desc">SZL letters, one orbit and the coral node, for placements of 24 to 48 pixels.</desc><rect width="600" height="600" rx="120" fill="#030F29"/><ellipse cx="300" cy="300" rx="262" ry="122" fill="none" stroke="#9AA7BD" stroke-width="22" transform="rotate(-22 300 300)"/><g transform="translate(300 300) scale(1.2) translate(-299.8 -299.1)"><g fill="#030F29" stroke="#030F29" stroke-width="18.33" stroke-linejoin="round"><path d="M228.256 331.049Q228.256 353.967 211.26 366.091Q194.265 378.214 161.383 378.214Q131.378 378.214 114.328 367.586Q97.278 356.957 92.406 335.367L123.96 330.163Q127.171 342.564 136.471 348.155Q145.771 353.746 162.268 353.746Q196.48 353.746 196.48 332.931Q196.48 326.288 192.549 321.97Q188.619 317.652 181.478 314.774Q174.336 311.895 154.075 307.798Q136.582 303.702 129.718 301.211Q122.853 298.72 117.317 295.343Q111.781 291.966 107.906 287.205Q104.031 282.444 101.872 276.023Q99.713 269.601 99.713 261.297Q99.713 240.15 115.601 228.913Q131.489 217.675 161.825 217.675Q190.833 217.675 205.392 226.754Q219.952 235.833 224.159 256.758L192.494 261.076Q190.058 251.001 182.585 245.908Q175.111 240.815 161.161 240.815Q131.489 240.815 131.489 259.415Q131.489 265.505 134.644 269.38Q137.8 273.255 144 275.967Q150.2 278.68 169.133 282.776Q191.608 287.537 201.296 291.578Q210.984 295.62 216.63 300.989Q222.277 306.359 225.266 313.833Q228.256 321.306 228.256 331.049Z"/><path d="M369.087 376H243.867V352.86L328.233 245.576H252.281V220H364.548V242.697L280.182 350.424H369.087Z"/><path d="M390.788 376V220H423.449V350.757H507.151V376Z"/></g><g fill="#FFFFFF"><path d="M228.256 331.049Q228.256 353.967 211.26 366.091Q194.265 378.214 161.383 378.214Q131.378 378.214 114.328 367.586Q97.278 356.957 92.406 335.367L123.96 330.163Q127.171 342.564 136.471 348.155Q145.771 353.746 162.268 353.746Q196.48 353.746 196.48 332.931Q196.48 326.288 192.549 321.97Q188.619 317.652 181.478 314.774Q174.336 311.895 154.075 307.798Q136.582 303.702 129.718 301.211Q122.853 298.72 117.317 295.343Q111.781 291.966 107.906 287.205Q104.031 282.444 101.872 276.023Q99.713 269.601 99.713 261.297Q99.713 240.15 115.601 228.913Q131.489 217.675 161.825 217.675Q190.833 217.675 205.392 226.754Q219.952 235.833 224.159 256.758L192.494 261.076Q190.058 251.001 182.585 245.908Q175.111 240.815 161.161 240.815Q131.489 240.815 131.489 259.415Q131.489 265.505 134.644 269.38Q137.8 273.255 144 275.967Q150.2 278.68 169.133 282.776Q191.608 287.537 201.296 291.578Q210.984 295.62 216.63 300.989Q222.277 306.359 225.266 313.833Q228.256 321.306 228.256 331.049Z"/><path d="M369.087 376H243.867V352.86L328.233 245.576H252.281V220H364.548V242.697L280.182 350.424H369.087Z"/><path d="M390.788 376V220H423.449V350.757H507.151V376Z"/></g></g><circle cx="373.69" cy="154.05" r="30" fill="#DF735F"/></svg><span>SZL Holdings</span></a>
+      <nav aria-label="Ecosystem"><a href="https://a11oy.net">Proof registry</a><a href="https://github.com/szl-holdings/governed-receipt-spec">Receipt specification</a></nav>
+    </div>
+  </header>
+  <main id="main" class="wrap" tabindex="-1">
+    <p class="eyebrow">Governed receipts / verifier status</p>
     <p class="status">BLOCKED · NO VERIFICATION PERFORMED</p>
     <h1>Browser receipt verification is unavailable</h1>
-    <div class="panel">
+    <p class="lead">Use the maintained offline verifier to inspect a receipt. This informational page does not accept receipts or issue verification results.</p>
+    <div class="actions">
+      <a class="button" href="https://github.com/szl-holdings/governed-receipt-spec#verify-in-one-command">Open offline verification guide</a>
+      <a class="source-link" href="https://github.com/szl-holdings/governed-receipt-spec/tree/main/space/governed-receipt-verifier">View this page’s source</a>
+    </div>
+    <div class="layout">
+      <section class="panel foil" aria-labelledby="status-heading">
+        <h2 id="status-heading">Why this page is blocked</h2>
       <p>This page does not accept receipts or issue verification results. The
       former browser prototype could report PASS without checking claimed
       hashes or cryptographic signatures. Do not use its earlier verdicts as
       evidence of integrity, signer identity, or authorization.</p>
       <p>Use the maintained
-      <a href="https://github.com/szl-holdings/governed-receipt-spec">offline Python verifier</a>
+      <a href="https://github.com/szl-holdings/governed-receipt-spec#verify-in-one-command" class="source-link">offline Python verifier</a>
       for receipt checks. Its README gives the installation and command-line
       steps. Supply a public key you obtained and trust independently to check
       signatures; without one, signature authentication is skipped.</p>
+
+      </section>
+      <section class="panel" aria-labelledby="offline-heading">
+        <h2 id="offline-heading">Continue with the offline verifier</h2>
+        <ol class="steps">
+          <li><div><strong>Read the maintained guide</strong>The repository README supplies installation and command-line steps for the Python verifier.</div></li>
+          <li><div><strong>Choose a trusted public key</strong>Obtain and trust the public key independently before using it to authenticate a signature.</div></li>
+          <li><div><strong>Keep each result in scope</strong>An integrity-only result does not authenticate a signer. A valid signature alone does not establish signer trust or authorize a governed action.</div></li>
+        </ol>
+        <p class="trust-note"><strong>No receipt is uploaded here.</strong> There is no receipt input, verification script, or result generator.</p>
+      </section>
     </div>
-    <p>Source for this informational page:
-    <a href="https://github.com/szl-holdings/governed-receipt-spec/tree/main/space/governed-receipt-verifier"><code>space/governed-receipt-verifier/</code></a>.</p>
   </main>
+  <footer><div class="wrap">
+    <p>Control before action. Evidence after.<br><a href="https://github.com/szl-holdings/governed-receipt-spec/tree/main/space/governed-receipt-verifier">Informational page source</a></p>
+    <p>Orbit v2 artwork © SZL Holdings.<br><a href="https://github.com/szl-holdings/szl-brand/blob/4309f6fce89179331b0b3ed8c99494e76c5be256/kit/LICENSE">Brand artwork: CC BY 4.0</a></p>
+  </div></footer>
 </body>
 </html>
