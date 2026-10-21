@@ -2,7 +2,7 @@
   "schema": "current-verifier-qualification/v1",
   "scope": "current verifier on retained public fixtures; no data-analysis rerun or signer-trust claim",
   "source_sha256": {
-    "verify.py": "7c3eb7e8702751ffad6c968ec719a8b265d03c300e85f5e417a8df4cb7d5c42d",
+    "verify.py": "b008e420894fd6b19da5cd411260f1772c925f1508b120fb5965d79469f497a4",
     "governed_action.py": "9c96e566e192e4c9b3a39bc39159d656869480907f6545c3f15e616341f0ce5b",
     "schema/governed-receipt.schema.json": "d894c805306f47daaaed80cd2c01b086aabadc3cd9f14f2d6c892cc6a843c141",
     "scripts/qualify_current_verifier.py": "d2189161f766c065d66d58e5c048b97de89708472a8b32ff1ca1e21eb6b79a30",
@@ -268,14 +268,14 @@
     }
   ],
   "execution": {
-    "observed_at_utc": "2026-10-02T01:13:59.461599+00:00",
+    "observed_at_utc": "2026-10-21T23:32:35.958414+00:00",
     "command": [
       "python",
       "scripts/qualify_current_verifier.py",
       "--output",
-      "C:/Users/steph/Documents/Codex/2026-08-11/prior-conversation-with-codex-conversation-role-7/outputs/receipt-boundary-20261001/current-verifier-qualification-final-v2.json"
+      "new_qual.json"
     ],
-    "python": "3.11.9",
+    "python": "3.11.16",
     "platform": "Windows",
     "packages": {
       "cryptography": "50.0.1",
