@@ -107,6 +107,23 @@ def _resolve_ref(ref, root):
     return node
 
 
+def _py_pattern(pattern):
+    """JSON Schema patterns use ECMA-262 semantics, where an unescaped trailing
+    ``$`` matches only at the end of input. Python's ``$`` also matches before a
+    trailing newline, which let a hex value ending in a newline satisfy
+    ``^[0-9a-f]{64}$``. Translate such a trailing ``$`` to ``\\Z``.
+    """
+    if pattern.endswith("$"):
+        slashes = 0
+        i = len(pattern) - 2
+        while i >= 0 and pattern[i] == "\\":
+            slashes += 1
+            i -= 1
+        if slashes % 2 == 0:
+            return pattern[:-1] + "\\Z"
+    return pattern
+
+
 def validate(value, schema, root=None, path="$", errors=None):
     """Return a list of error strings (empty == valid)."""
     if root is None:
@@ -150,7 +167,7 @@ def validate(value, schema, root=None, path="$", errors=None):
     # strings
     if isinstance(value, str):
         pat = schema.get("pattern")
-        if pat is not None and re.search(pat, value) is None:
+        if pat is not None and re.search(_py_pattern(pat), value) is None:
             errors.append("%s: %r does not match pattern %r" % (path, value, pat))
 
     # numbers
@@ -665,9 +682,12 @@ def check_clear_claim_binding(record, envelope, schema):
 # --------------------------------------------------------------------------- #
 # Chain check                                                                  #
 # --------------------------------------------------------------------------- #
-def check_chain(decisions):
+def check_chain(decisions, allow_partial=False):
     """Check the prev-hash chain across an ordered list of decision objects.
 
+    A chain must start at genesis (seq 0 with a zero ``prev``). Verifying a
+    fragment that starts later must be requested explicitly with
+    ``allow_partial``; it is then reported as a fragment, never as a full chain.
     Returns (ok, [messages]).
     """
     msgs = []
@@ -679,6 +699,15 @@ def check_chain(decisions):
     if all("seq" in d for d in chainable):
         chainable = sorted(chainable, key=lambda d: d["seq"])
     first = chainable[0]
+    partial_note = None
+    if "seq" in first and first.get("seq") != 0:
+        if not allow_partial:
+            ok = False
+            msgs.append("chain does not start at genesis (lowest seq %s); verify a "
+                        "fragment only with --allow-partial" % first.get("seq"))
+        else:
+            partial_note = ("FRAGMENT starting at seq %s: genesis and anything before "
+                            "it were not verified" % first.get("seq"))
     if first.get("seq") == 0 and first.get("prev") != ZERO_HASH:
         ok = False
         msgs.append("genesis (seq 0) prev must be 64 zeros, got %s" % first.get("prev"))
@@ -698,6 +727,8 @@ def check_chain(decisions):
                         % (cur["seq"], prev_rec["seq"]))
     if ok:
         msgs.append("hash chain intact across %d receipt(s)" % len(chainable))
+        if partial_note:
+            msgs.append(partial_note)
     return ok, msgs
 
 
@@ -729,7 +760,7 @@ def _integer_text_error(records):
     return None
 
 
-def verify_records(records, schema, public_key_pem=None):
+def verify_records(records, schema, public_key_pem=None, allow_partial=False):
     """Return (ok, report_lines) for the selected verification mode.
 
     Without a key, ok covers only the applicable integrity/structure checks.
@@ -793,6 +824,11 @@ def verify_records(records, schema, public_key_pem=None):
 
         # (b) content hash
         h_ok, h_msg = check_content_hash(record, envelope)
+        if (h_ok and envelope is not None and h_msg.startswith("no content-hash field")
+                and not envelope.get("signatures")):
+            # Unsigned AND unhashed: no check in any mode can bind this payload.
+            h_ok = False
+            h_msg = "unsigned envelope with no content-hash field: nothing binds the payload"
         ok = ok and h_ok
         lines.append("    hash:   %s %s" % ("PASS" if h_ok else "FAIL", h_msg))
 
@@ -830,19 +866,19 @@ def verify_records(records, schema, public_key_pem=None):
     if invalid_decision:
         c_ok, c_msgs = False, ["malformed receipt prevents complete chain verification"]
     else:
-        c_ok, c_msgs = check_chain(decisions)
+        c_ok, c_msgs = check_chain(decisions, allow_partial=allow_partial)
     ok = ok and c_ok
     for m in c_msgs:
         lines.append("- chain: %s %s" % ("PASS" if c_ok else "FAIL", m))
     return ok, lines
 
 
-def verify_file(path, schema, public_key_pem=None):
+def verify_file(path, schema, public_key_pem=None, allow_partial=False):
     try:
         records = load_records(path)
     except (OSError, strict_json.MalformedJSON) as exc:
         return False, ["- records: FAIL input unreadable or malformed (%s)" % type(exc).__name__]
-    return verify_records(records, schema, public_key_pem)
+    return verify_records(records, schema, public_key_pem, allow_partial=allow_partial)
 
 
 def load_schema(path):
@@ -867,6 +903,12 @@ def main(argv=None):
             "must have a signed envelope and all signatures must verify. Without it, "
             "signature verification is reported as SKIP, never as a pass."
         ),
+    )
+    parser.add_argument(
+        "--allow-partial",
+        action="store_true",
+        help="accept a chain fragment that does not start at genesis (seq 0); "
+             "the result is reported as a fragment",
     )
     args = parser.parse_args(argv)
 
@@ -893,7 +935,7 @@ def main(argv=None):
     for path in args.receipts:
         print("=== %s ===" % path)
         try:
-            file_ok, lines = verify_file(path, schema, public_key_pem)
+            file_ok, lines = verify_file(path, schema, public_key_pem, allow_partial=args.allow_partial)
         except Exception as exc:  # noqa: BLE001
             print("  FAIL could not process file: %s" % exc)
             all_ok = False
