@@ -2,7 +2,7 @@
   "schema": "current-verifier-qualification/v1",
   "scope": "current verifier on retained public fixtures; no data-analysis rerun or signer-trust claim",
   "source_sha256": {
-    "verify.py": "b008e420894fd6b19da5cd411260f1772c925f1508b120fb5965d79469f497a4",
+    "verify.py": "9da24d248f3d1f3dcf96b031e8466b96833d83f4262be8f73af6a61e8f32ecd0",
     "governed_action.py": "9c96e566e192e4c9b3a39bc39159d656869480907f6545c3f15e616341f0ce5b",
     "schema/governed-receipt.schema.json": "d894c805306f47daaaed80cd2c01b086aabadc3cd9f14f2d6c892cc6a843c141",
     "scripts/qualify_current_verifier.py": "d2189161f766c065d66d58e5c048b97de89708472a8b32ff1ca1e21eb6b79a30",
@@ -268,14 +268,12 @@
     }
   ],
   "execution": {
-    "observed_at_utc": "2026-10-21T23:32:35.958414+00:00",
+    "observed_at_utc": "2026-10-23T22:43:57.118287+00:00",
     "command": [
       "python",
-      "scripts/qualify_current_verifier.py",
-      "--output",
-      "new_qual.json"
+      "scripts/qualify_current_verifier.py"
     ],
-    "python": "3.11.16",
+    "python": "3.11.9",
     "platform": "Windows",
     "packages": {
       "cryptography": "50.0.1",
