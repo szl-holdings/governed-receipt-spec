@@ -50,7 +50,10 @@ import math
 import os
 import re
 
-import governed_action as strict_json
+if __package__:
+    from . import governed_action as strict_json
+else:
+    import governed_action as strict_json
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization

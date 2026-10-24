@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools==78.1.0", "wheel==0.47.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "governed-receipt-verifier"
+version = "0.0.0.dev0"
+description = "Offline verifier for SZL governed receipts; local distribution preview"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = [
+    "in-toto-attestation==0.9.3",
+    "cryptography==50.0.1",
+]
+
+[project.urls]
+Repository = "https://github.com/szl-holdings/governed-receipt-spec"
+
+[tool.setuptools]
+packages = ["governed_receipt_verifier"]
+package-dir = {governed_receipt_verifier = "."}
+include-package-data = false
+
+[tool.setuptools.package-data]
+governed_receipt_verifier = ["schema/governed-receipt.schema.json"]
