@@ -162,16 +162,18 @@ class WatchList:
             raise EvidenceStop("MISSING_METADATA", "review decision")
         if not review.get("evidence_ref") or not review.get("reviewer"):
             raise EvidenceStop("MISSING_METADATA", "reviewer and evidence reference")
-        item["review_state"] = "HUMAN_REVIEW_RECORDED"
-        item["scientific_validity"] = "NOT_ESTABLISHED"
-        if decision == "REVIEW_RECORDED" and item["condition_met"]:
-            item["machine_state"] = "UNBLOCK_RECORDED_BY_REVIEWER"
+        # Accept the evidence event before changing the decision state.
+        # A duplicate or incomplete event must leave the entire item unchanged.
         self._event(item, review["event_id"], "HUMAN_REVIEW", review["observed_at"], {
             "decision": decision,
             "evidence_ref": review["evidence_ref"],
             "reviewer": review["reviewer"],
             "external_checks_remain": list(item["external_checks"]),
         })
+        item["review_state"] = "HUMAN_REVIEW_RECORDED"
+        item["scientific_validity"] = "NOT_ESTABLISHED"
+        if decision == "REVIEW_RECORDED" and item["condition_met"]:
+            item["machine_state"] = "UNBLOCK_RECORDED_BY_REVIEWER"
         return item
 
     def cite(self, item_id: str, source_id: str) -> dict:
