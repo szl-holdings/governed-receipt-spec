@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import unittest
+from copy import deepcopy
 
 from science_evidence.contract import EvidenceStop
 from science_evidence.watch import WatchList
@@ -154,6 +155,59 @@ class WatchTests(unittest.TestCase):
         self.assertEqual(item["machine_state"], "UNBLOCK_RECORDED_BY_REVIEWER")
         self.assertEqual(item["scientific_validity"], "NOT_ESTABLISHED")
         self.assertTrue(item["external_checks"])
+
+    def test_duplicate_review_cannot_change_a_recorded_denial(self) -> None:
+        watch = WatchList()
+        item = watch.add(spec())
+        watch.observe("GAP-1", observation(condition_met=True))
+        review = {
+            "event_id": "review-1",
+            "observed_at": "2026-10-09T04:00:00Z",
+            "decision": "UNBLOCK_NOT_GRANTED",
+            "evidence_ref": "external-note",
+            "reviewer": "named-reviewer",
+        }
+        watch.record_review("GAP-1", review)
+        before = deepcopy(item)
+        with self.assertRaises(EvidenceStop) as caught:
+            watch.record_review("GAP-1", {**review, "decision": "REVIEW_RECORDED"})
+        self.assertEqual(caught.exception.reason, "DUPLICATE_IDENTIFIER")
+        self.assertEqual(item, before)
+
+    def test_review_reusing_observation_id_cannot_unblock(self) -> None:
+        watch = WatchList()
+        item = watch.add(spec())
+        watch.observe("GAP-1", observation(condition_met=True))
+        before = deepcopy(item)
+        with self.assertRaises(EvidenceStop) as caught:
+            watch.record_review("GAP-1", {
+                "event_id": "obs-1",
+                "observed_at": "2026-10-09T04:00:00Z",
+                "decision": "REVIEW_RECORDED",
+                "evidence_ref": "external-note",
+                "reviewer": "named-reviewer",
+            })
+        self.assertEqual(caught.exception.reason, "DUPLICATE_IDENTIFIER")
+        self.assertEqual(item, before)
+
+    def test_review_missing_event_fields_preserves_all_state(self) -> None:
+        for missing in ("event_id", "observed_at"):
+            with self.subTest(missing=missing):
+                watch = WatchList()
+                item = watch.add(spec())
+                watch.observe("GAP-1", observation(condition_met=True))
+                review = {
+                    "event_id": "review-1",
+                    "observed_at": "2026-10-09T04:00:00Z",
+                    "decision": "REVIEW_RECORDED",
+                    "evidence_ref": "external-note",
+                    "reviewer": "named-reviewer",
+                }
+                del review[missing]
+                before = deepcopy(item)
+                with self.assertRaises(KeyError):
+                    watch.record_review("GAP-1", review)
+                self.assertEqual(item, before)
 
     def test_repeated_citation_is_not_independent(self) -> None:
         watch = WatchList()
