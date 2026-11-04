@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "governed-receipt-spec — SZL governed receipt specification"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - name: "SZL Holdings"
+repository-code: "https://github.com/szl-holdings/governed-receipt-spec"
+license: Apache-2.0
