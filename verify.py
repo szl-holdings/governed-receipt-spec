@@ -24,6 +24,10 @@ For each receipt the verifier:
   (f) when --verify-key is given, cryptographically verifies every envelope
       signature: ECDSA P-256 SHA-256 over the DSSE PAE of the DECODED payload
       bytes. Without a key the check is reported as SKIP — never as a pass.
+  (g) when the decision claims a quantized artifact, requires the artifact
+      digest, source-weight digest, quantizer name, quantizer version, and
+      eval digest. Absence of that claim is not a qualification. This check
+      does not rehash weight bytes.
 
 It prints a clear PASS / FAIL per receipt and per file with reasons.
 
@@ -52,8 +56,10 @@ import re
 
 if __package__:
     from . import governed_action as strict_json
+    from .quant_binding import check_quantized_artifact_binding
 else:
     import governed_action as strict_json
+    from quant_binding import check_quantized_artifact_binding
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
@@ -839,6 +845,11 @@ def verify_records(records, schema, public_key_pem=None, allow_partial=False):
         b_ok, b_msg = check_clear_claim_binding(record, envelope, schema)
         ok = ok and b_ok
         lines.append("    bind:   %s %s" % ("PASS" if b_ok else "FAIL", b_msg))
+
+        # (g) quantized artifact binding, only when that claim is present
+        q_ok, q_msg = check_quantized_artifact_binding(decision)
+        ok = ok and q_ok
+        lines.append("    quant:  %s %s" % ("PASS" if q_ok else "FAIL", q_msg))
 
         # (a) schema (inference receipts only)
         if is_inference_receipt(decision):

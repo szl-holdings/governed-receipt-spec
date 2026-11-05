@@ -2,10 +2,11 @@
   "schema": "current-verifier-qualification/v1",
   "scope": "current verifier on retained public fixtures; no data-analysis rerun or signer-trust claim",
   "source_sha256": {
-    "verify.py": "9da24d248f3d1f3dcf96b031e8466b96833d83f4262be8f73af6a61e8f32ecd0",
+    "verify.py": "74901e59d8d357731650f225eba5b38ae7cb98c394912d0fee47df11bc1a87e3",
+    "quant_binding.py": "714acf235689102e5268db012fce6aa513044b494e66faad59b15390d3344a76",
     "governed_action.py": "9c96e566e192e4c9b3a39bc39159d656869480907f6545c3f15e616341f0ce5b",
-    "schema/governed-receipt.schema.json": "d894c805306f47daaaed80cd2c01b086aabadc3cd9f14f2d6c892cc6a843c141",
-    "scripts/qualify_current_verifier.py": "d2189161f766c065d66d58e5c048b97de89708472a8b32ff1ca1e21eb6b79a30",
+    "schema/governed-receipt.schema.json": "fdd14dd6ee635a3f3bd87e952093a848da14f69db480e3ef766f09e55cb759c0",
+    "scripts/qualify_current_verifier.py": "f1485713d0b562217043983543e8ea866a6faf96f79912225d6ea3aa89bfe89c",
     "examples/public-single-cell/observed-run.json": "0f9d8446925b6c694491382c8f445004fa5645691336578249348d50bd4b3fa4",
     "examples/a11oy-khipu-chain.json": "21e53e51f27175d2bc7ea780a4a83e4b448c04b2a9b9359fd60b25fe166e7a6e",
     "tests/fixtures/cosign.pub": "c8c5e82330590f3ee04e75350e345704e4b69df3000cc211e4e18fb0ea8854ad",
@@ -30,6 +31,7 @@
         "    sig:    SKIP unsigned envelope; signature authenticity not checked",
         "    hash:   PASS DSSE PAE sha256 verified (161b77aa7acb9f62)",
         "    bind:   PASS flat envelope contains no external clear claims (n/a)",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: SKIP non-inference receipt (envelope + hash checks only)",
         "- chain: PASS no chainable receipts (n/a)"
       ]
@@ -48,6 +50,7 @@
         "    sig:    FAIL --verify-key requires at least one envelope signature",
         "    hash:   PASS DSSE PAE sha256 verified (161b77aa7acb9f62)",
         "    bind:   PASS flat envelope contains no external clear claims (n/a)",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: SKIP non-inference receipt (envelope + hash checks only)",
         "- chain: PASS no chainable receipts (n/a)"
       ]
@@ -70,6 +73,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (7541ce8850a4d99f)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[1]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -77,6 +81,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6cb72a1f750705b5)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[2]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -84,6 +89,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (51fa00836c156375)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[3]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -91,6 +97,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (4e71f14c962a472d)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[4]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -98,6 +105,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6d14b760273e2b3a)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- chain: PASS hash chain intact across 5 receipt(s)"
       ]
@@ -120,6 +128,7 @@
         "    sig:    PASS 1 signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE (decoded payload bytes)",
         "    hash:   PASS DSSE PAE sha256 verified (7541ce8850a4d99f)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[1]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -127,6 +136,7 @@
         "    sig:    PASS 1 signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE (decoded payload bytes)",
         "    hash:   PASS DSSE PAE sha256 verified (6cb72a1f750705b5)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[2]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -134,6 +144,7 @@
         "    sig:    PASS 1 signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE (decoded payload bytes)",
         "    hash:   PASS DSSE PAE sha256 verified (51fa00836c156375)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[3]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -141,6 +152,7 @@
         "    sig:    PASS 1 signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE (decoded payload bytes)",
         "    hash:   PASS DSSE PAE sha256 verified (4e71f14c962a472d)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[4]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -148,6 +160,7 @@
         "    sig:    PASS 1 signature(s) verified: ECDSA P-256 SHA-256 over DSSE PAE (decoded payload bytes)",
         "    hash:   PASS DSSE PAE sha256 verified (6d14b760273e2b3a)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- chain: PASS hash chain intact across 5 receipt(s)"
       ]
@@ -169,6 +182,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (7541ce8850a4d99f)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[1]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -176,6 +190,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6cb72a1f750705b5)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[2]: decoded payload is not valid JSON (MalformedJSON)",
         "    dsse:   FAIL decoded payload is not valid JSON (MalformedJSON)",
@@ -187,6 +202,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (4e71f14c962a472d)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[4]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -194,6 +210,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6d14b760273e2b3a)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- chain: FAIL malformed receipt prevents complete chain verification"
       ]
@@ -216,6 +233,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (7541ce8850a4d99f)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[1]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -223,6 +241,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6cb72a1f750705b5)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[2]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -230,6 +249,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (51fa00836c156375)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[3]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -237,6 +257,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (339e8dfa0c80da42)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- receipt[4]: decision fields decoded from DSSE envelope payload",
         "    dsse:   PASS DSSE envelope well-formed (signed, 1 signature(s))",
@@ -244,6 +265,7 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (6d14b760273e2b3a)",
         "    bind:   PASS all clear claims across wrapper ancestors match sealed payload",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- chain: FAIL seq 3 prev deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef != seq 2 digest f4105c39b7f86f39d58f27698825c1a93aafdc4baffaf2ede300cd3ab4ea1996"
       ]
@@ -262,18 +284,21 @@
         "    sig:    SKIP 1 signature(s) present but no --verify-key supplied; signature not cryptographically verified",
         "    hash:   PASS DSSE PAE sha256 verified (e169fb1553e6b922)",
         "    bind:   FAIL UNBOUND clear claim(s) absent or different in sealed payload: decision, energy",
+        "    quant:  PASS no quantized artifact claim (n/a); absence is not a qualification",
         "    schema: PASS validates governed-receipt.schema.json",
         "- chain: PASS hash chain intact across 1 receipt(s)"
       ]
     }
   ],
   "execution": {
-    "observed_at_utc": "2026-10-23T22:43:57.118287+00:00",
+    "observed_at_utc": "2026-11-05T02:34:07.682104+00:00",
     "command": [
       "python",
-      "scripts/qualify_current_verifier.py"
+      "scripts/qualify_current_verifier.py",
+      "--output",
+      "conformance/current-verifier-qualification.json"
     ],
-    "python": "3.11.9",
+    "python": "3.12.10",
     "platform": "Windows",
     "packages": {
       "cryptography": "50.0.1",

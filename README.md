@@ -47,6 +47,7 @@ The schema (`schema/governed-receipt.schema.json`, JSON Schema draft 2020-12) is
 - **`energy`** — `{ joules, label }`. **Joules are never fabricated:** with no live meter, `joules` is `null` and `label` is `UNAVAILABLE`, with an honest reason in `evidence`.
 - **`ts`** — emission time (Unix seconds float, as in real receipts, or ISO-8601).
 - **`payload_digest`** — SHA-256 of the underlying governed payload (the content itself is intentionally not embedded).
+- **`quantized_artifact`** *(optional)* — a claim that names the quantized file digest, the source-weight digest, the quantizer name and version, and the fixed eval digest. Leaving it out is not a qualification. Unresolved labels such as `UNKNOWN` fail. The verifier does not rehash the weight bytes.
 - **`prev` / `digest` / `seq`** — the hash chain. Each receipt's `prev` equals the previous receipt's `digest`; genesis uses 64 zeros at `seq` 0.
 - **DSSE envelope** *(optional)* — `dsse` / `envelope`: a signed [DSSE](https://github.com/secure-systems-lab/dsse) envelope binding the payload via the DSSE PAE, with SZL honesty extensions (`_pae_sha256`, `honesty`, `verify_key_url`).
 - **`otel`** *(optional)* — an OpenTelemetry span link (see `vsp-otel`).
@@ -70,8 +71,9 @@ The verifier, for each receipt:
 2. **recomputes the content hash** and checks it — `sha256(DSSE PAE) == _pae_sha256` for signed khipu/lake receipts, or `sha256(payload) == payloadSha256` for readiness receipts (this matches SZL's own documented `how_to_verify`);
 3. **checks the prev-hash chain** across a receipt list (`prev == previous.digest`, contiguous `seq`, genesis is 64 zeros);
 4. **structurally checks the DSSE envelope**;
-5. **validates in-toto Statement payloads** through the pinned `in-toto-attestation` 0.9.3 bindings (ITE-6 minimums); and
-6. with `--verify-key cosign.pub`, **cryptographically verifies every envelope signature** — ECDSA P-256 SHA-256 over the DSSE PAE of the *decoded* payload bytes, via `cryptography` 50.0.1:
+5. **validates in-toto Statement payloads** through the pinned `in-toto-attestation` 0.9.3 bindings (ITE-6 minimums);
+6. with `--verify-key cosign.pub`, **cryptographically verifies every envelope signature** — ECDSA P-256 SHA-256 over the DSSE PAE of the *decoded* payload bytes, via `cryptography` 50.0.1; and
+7. when a receipt **claims a quantized artifact**, requires that claim's five bindings and refuses a claim that says the bytes were rehashed here:
 
 ```bash
 python verify.py --verify-key tests/fixtures/cosign.pub examples/a11oy-khipu-chain.json

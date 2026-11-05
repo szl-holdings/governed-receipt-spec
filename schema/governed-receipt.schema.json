@@ -107,6 +107,41 @@
       "description": "Optional grounded citations attached to the governed action.",
       "items": {}
     },
+    "quantized_artifact": {
+      "type": "object",
+      "description": "OPTIONAL claim that a quantized artifact is bound to its source weights, quantizer build, and a fixed eval. Absence is not a qualification. The offline verifier checks that the fields are present and well formed. It does not rehash the weight bytes, and bytes_rehashed true is refused.",
+      "additionalProperties": true,
+      "required": ["artifact_sha256", "source_weights_sha256", "quantizer_name", "quantizer_version", "eval_sha256"],
+      "properties": {
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the quantized artifact bytes. The verifier does not recompute it."
+        },
+        "source_weights_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the source weights the quantizer read."
+        },
+        "quantizer_name": {
+          "type": "string",
+          "description": "Quantizer implementation name. Unresolved labels such as UNKNOWN are refused."
+        },
+        "quantizer_version": {
+          "type": "string",
+          "description": "Quantizer version. Unresolved labels such as UNKNOWN are refused."
+        },
+        "eval_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "SHA-256 of the fixed evaluation record for this artifact."
+        },
+        "bytes_rehashed": {
+          "type": "boolean",
+          "description": "Must not be true. This verifier does not rehash artifact bytes."
+        }
+      }
+    },
     "signature": {
       "type": "string",
       "description": "Inline signature slot inside the decision body. In real receipts this is the placeholder 'DSSE_PLACEHOLDER'; the authoritative signature lives in the DSSE envelope (see `dsse` / `envelope`)."
