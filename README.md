@@ -1,3 +1,7 @@
+**The governed receipt specification: portable, verifiable evidence records for AI actions — what happened, signed by whom, checkable by anyone.**
+
+Demo: https://a11oy.net · Verify in 60s: `git clone https://github.com/szl-holdings/governed-receipt-spec && cd governed-receipt-spec && pip install -e . && pytest -q`
+
 # governed-receipt-spec
 <!-- szl:header v1 -->
 <!-- Native identity: szl-brand@4309f6fce89179331b0b3ed8c99494e76c5be256; Orbit v2 icon. -->
