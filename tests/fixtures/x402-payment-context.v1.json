@@ -1,0 +1,1350 @@
+{
+ "schema": "szl.x402-payment-context-vectors.v1",
+ "generator": "tools/x402_payment_context_vectors.py",
+ "notice": "Test-only Ed25519 keys derived from fixed labels; not Cloudflare keys, not wallet keys. Claims follow the examples on Cloudflare's Payment validation page (2026-09-30).",
+ "contract": {
+  "default_leeway_seconds": 5,
+  "max_leeway_seconds": 30,
+  "min_atomic": 1000,
+  "max_atomic": 100000000,
+  "max_token_length": 8192
+ },
+ "jwks": {
+  "primary": {
+   "keys": [
+    {
+     "kty": "OKP",
+     "crv": "Ed25519",
+     "x": "BFa91OQaUw4Qh6kU7aQsPcHB3i0nWC9YkiIFkXhmBQE",
+     "kid": "vector-primary",
+     "alg": "EdDSA",
+     "use": "sig"
+    },
+    {
+     "kty": "OKP",
+     "crv": "Ed25519",
+     "x": "_VDYLOCrqvqQ4YXlWWIxD0pX3cUZBI-9rUEgIAxNOp8",
+     "kid": "vector-rotated",
+     "alg": "EdDSA",
+     "use": "sig"
+    }
+   ]
+  },
+  "single": {
+   "keys": [
+    {
+     "kty": "OKP",
+     "crv": "Ed25519",
+     "x": "BFa91OQaUw4Qh6kU7aQsPcHB3i0nWC9YkiIFkXhmBQE",
+     "kid": "vector-primary",
+     "alg": "EdDSA",
+     "use": "sig"
+    }
+   ]
+  }
+ },
+ "vectors": [
+  {
+   "name": "exact-valid",
+   "note": "Cloudflare's documented exact example",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "exact-valid-numeric-expected-amount",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": 25000,
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "upto-valid-at-maximum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9nZW5lcmF0ZSIsInNjaGVtZSI6InVwdG8iLCJhbW91bnQiOiIxMDAwMDAifQ.Xlhu22s5BUq8RkNTS2wIugchTBe-CmZPffmMdi-F974RkjKcD5cHL5cuP0KqhdthmAbllc55ZlN08ikzn3AYCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/generate",
+   "scheme": "upto",
+   "expected_amount": "100000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 100000
+   }
+  },
+  {
+   "name": "upto-valid-below-maximum",
+   "note": "upto: the signed maximum may be below the route maximum; work and settlement must stay within the signed maximum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9nZW5lcmF0ZSIsInNjaGVtZSI6InVwdG8iLCJhbW91bnQiOiI0MDAwMCJ9.NRY5hjUAtiaZ0Jd3-ahG7ZiZtzihMhYEeU5k_nNjdb-6J5kCYXL1GbE9j8E73ZgyP_Y82UuBskcsTXBE__5JDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/generate",
+   "scheme": "upto",
+   "expected_amount": "100000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 40000
+   }
+  },
+  {
+   "name": "rotated-key-valid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1yb3RhdGVkIiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.20W1teXk_2OXqojz7vAcoggxoJNt53Tu7hK_dVK7d7GXkxyWLTbqUSeNRr-tKAqEhaEhsfWheQJxaZfv_YhnCQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "no-kid-single-key-valid",
+   "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.fUdkhwolpz5x0tRRtddD5tTynhg18X9WJDONxPFzECcUrtXsIgch4yfyqHrV87uIGB6KhPMZY99Mk3yD_YsCDA",
+   "jwks": "single",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "integral-float-exp-valid",
+   "note": "JSON cannot distinguish 1770000120.0 from 1770000120",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLjAsImF1ZCI6Imh0dHBzOi8vYXBpLmV4YW1wbGUuY29tL3ByZW1pdW0tZGF0YSIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.qx7u2JUGuv0sBgkbLv5yqHirBlkGyPn_BlSfxyHbRR0y38y_NB0SnIwdjkkMXG7lWuQSFkVdkmSCoTlfWHuABw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "nbf-4s-ahead-within-leeway",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDA2NCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.GuszIvA-xRydsFfulw3gRNeaRiOVS9LIuyBcVk5-nN6sFt9AHrVgCp_pg4fqcPnGPRwOMGwtpjlpAiK6G5PzAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "iat-4s-ahead-within-leeway",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwNjQsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.ns6Fo1NpRtpQhgO-jZhCARP0JC-pAZ3TvQymIowL9GethO4Xdpox9V5SfO-fBUq9mCWZf3tvTCtgWzmwL5MECQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "exp-4s-past-within-leeway",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000124,
+   "leeway": 5,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "zero-leeway-valid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 0,
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "request-url-with-query-valid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://api.example.com/premium-data?stream=false",
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "request-url-default-port-valid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://api.example.com:443/premium-data",
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "request-url-uppercase-host-valid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://API.Example.com/premium-data",
+   "result": {
+    "valid": true,
+    "amount": 25000
+   }
+  },
+  {
+   "name": "exact-cheaper-rule-amount",
+   "note": "a context signed for a cheaper rule must not unlock this route",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjEwMDAwIn0.RSq82sxBQwigt4txvu17eXrCwkWYdh5lSob53foGp5NcrVuiNpxXBItPqvfGv5RON0-rTHzFif9X90mQx6kWBw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_MISMATCH"
+   }
+  },
+  {
+   "name": "exact-pricier-rule-amount",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjUwMDAwIn0.eypLvgsGuDuG0nGqFkgE9cS9GkRT8bnwE3eSzfiDpfLoGnviqfkqUwKIUneDOb8xuXDk5co586pH51WTsdhyDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_MISMATCH"
+   }
+  },
+  {
+   "name": "upto-above-route-maximum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9nZW5lcmF0ZSIsInNjaGVtZSI6InVwdG8iLCJhbW91bnQiOiIyMDAwMDAifQ.z42pWaKN6kDCNERmzs_wuE4c6M_03omE9xjEcBRcIGhlWOMccy7wMw4sTmWLHoavyN1b-z_Ne5buHCCl9lAwAQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/generate",
+   "scheme": "upto",
+   "expected_amount": "100000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_ABOVE_MAXIMUM"
+   }
+  },
+  {
+   "name": "upto-context-on-exact-route",
+   "note": "scheme confusion: a cheap upto maximum must not pass as an exact payment",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJ1cHRvIiwiYW1vdW50IjoiMTAwMCJ9.2J2dgiL4dgF0rZv64F4K8W6jm2dTe34AxT9Z2-K6Dmf8TUva9G5xDZZSGS9v0d1xAnljTlw69B3d5jGC046jBg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_SCHEME"
+   }
+  },
+  {
+   "name": "exact-context-on-upto-route",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9nZW5lcmF0ZSIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMTAwMDAwIn0.eKrOYMYvEi-Pzird0nYSVQREbp90NWCuDMoxVbeZto9WK1Hyz4oIS48B-ZfDUOUFnovCsPLb10B4xJS1jJbSAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/generate",
+   "scheme": "upto",
+   "expected_amount": "100000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_SCHEME"
+   }
+  },
+  {
+   "name": "scheme-missing",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJhbW91bnQiOiIyNTAwMCJ9.AOcrpEBzpZB3cM14XgSOgV70qZrfmgSaO0FSJwnFGgJM6fpPKCiyho4Xcp3gnCqKFfO0brIo3UmyE0WnZc8mDA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_SCHEME"
+   }
+  },
+  {
+   "name": "amount-number",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6MjUwMDB9.e78PLCjRmG4664iOkTPOPuUb_6hpR5QfXqvxf2iv_9-FBusLTdvRZW3E2xRN7Qy73KcULbnex0ZM7bd-1AI_CA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_AMOUNT"
+   }
+  },
+  {
+   "name": "amount-leading-zero",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjAyNTAwMCJ9.zKmpFjRmghsUvuPrP8yjz-Ohf3mJDnxO-gwtXn5BvI4S_5pQ_M01x3dMj20quFDvVFX2knVNcF7vXhYIUG2bCQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_AMOUNT"
+   }
+  },
+  {
+   "name": "amount-decimal",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwLjAifQ.Ncdr2fBAhcyH4SXkZFTihyCQFphzZ3ARvR5X_ryoiNjo--4TcwMzmY_-2IzIb7oKg9vCsHyydsPt8iF4OT1QBA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_AMOUNT"
+   }
+  },
+  {
+   "name": "amount-missing",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCJ9.gOwz1wK2KYoiR4lvDqC8Sje_nHYVGTNipY-YSWFhhgibii5XCqZ9wq4Z7RuVi5LN3nBlizDgEPl55k-ZJ6U0DA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_AMOUNT"
+   }
+  },
+  {
+   "name": "amount-below-minimum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6Ijk5OSJ9.LpMcBaGyfPalFb0tR1z_PZXVhbofu84rTZblZv_3uXA4GDZs1qVVxZmsMXk2BVDlWB68GMEeZfeMJw2bUZu-CA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_OUT_OF_BOUNDS"
+   }
+  },
+  {
+   "name": "amount-above-maximum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjEwMDAwMDAwMSJ9.EoADL3fHWwLAoFk78-9hN2VT0JZbN8kH6h69LaFllPlVCQR8lxowdZ3VDY68ZaMQ8AGL8AJ9fexmND_DfI9cCQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_OUT_OF_BOUNDS"
+   }
+  },
+  {
+   "name": "amount-very-long",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjEwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIn0.w1hkZ0xSSZJnvqjSaXnCAu34QSAeAz-bekuaWqy-XBE80RP2k32Tu6Bz9Jv94Rt9k0J-lxZYapGdiNClXt9wDA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "AMOUNT_OUT_OF_BOUNDS"
+   }
+  },
+  {
+   "name": "expired-at-leeway-boundary",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000125,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "EXPIRED"
+   }
+  },
+  {
+   "name": "expired-zero-leeway",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000120,
+   "leeway": 0,
+   "result": {
+    "valid": false,
+    "reason": "EXPIRED"
+   }
+  },
+  {
+   "name": "nbf-6s-ahead",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDA2NiwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.0U-AduYSMq7gcx8YIepAup9Kc066o6fWAWpWkoM8pLMezZL8CgM3WD7dnbkNiiH_PeroUMCREXGssEDIfb0jBQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "NOT_YET_VALID"
+   }
+  },
+  {
+   "name": "iat-6s-ahead",
+   "note": "a future iat beyond the leeway is rejected",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwNjYsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.U9WOHBhjWZDbHEdIxpaVKp8tF23fIk6ZBEgHc-dWqxqN0DN4qOs0CrzvArQf_1kGYXN3ooqybKfupZveI8TtDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "NOT_YET_VALID"
+   }
+  },
+  {
+   "name": "exp-string",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoiMTc3MDAwMDEyMCIsImF1ZCI6Imh0dHBzOi8vYXBpLmV4YW1wbGUuY29tL3ByZW1pdW0tZGF0YSIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.XE8tCbhaWMW-5vmdKpH6v6r-s0M5JciXtvBbVTnytddLoFcKRvSLk23gM7XRJXTBFzfr_d4x7hSb5zgy3tLiAQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "exp-fraction",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLjUsImF1ZCI6Imh0dHBzOi8vYXBpLmV4YW1wbGUuY29tL3ByZW1pdW0tZGF0YSIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.EPbU8kbsAvHCFU4XCjGkgBiUyjSpkNxmZXKLG_IyxphofyXRjcyZ-kp5gERN1oAjxoLHLwG_mlLiZ4CzL09PAg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "iat-boolean",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOnRydWUsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.G1HQdgrKY-7I3KxnB__R5wDBLrcgbhMcGbcgPljG1NkevFHSskMsraqsJGCantIDFbEwqv-BgOBR4bcNX96FAg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "nbf-missing",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsImV4cCI6MTc3MDAwMDEyMCwiYXVkIjoiaHR0cHM6Ly9hcGkuZXhhbXBsZS5jb20vcHJlbWl1bS1kYXRhIiwic2NoZW1lIjoiZXhhY3QiLCJhbW91bnQiOiIyNTAwMCJ9.KfnzfGxFQIR0SkhROSBR5ZYbToWiM2K8T94XRvNeIXKEdETppOoj6TH8K9uRFGZ3QBkmIKVQSIqg-xiKQYhFBg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "exp-unsafe-integer",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjo5MDA3MTk5MjU0NzQwOTkyLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.3QQcVvsJwuM3fyM2nUazUHSeMtbLk2qS9iEAD6sUvlXkq_HP-EmNIyQnflxbnKoIYeteFNLwaOETYqRvWEAlCA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "iat-after-exp",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAxMjEsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.b0lzAyUVOPjbOII-rjnoivYfxHmKInzQcTpScd3JpsPaQJQnKjzpOxDfq2zRtJyvt7M1YWaaGLkUyeGQagr4BQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000119,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TIME_CLAIMS_INVALID"
+   }
+  },
+  {
+   "name": "audience-other-path",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9vdGhlciIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.Jo8HzFpjqqCpoe3nC65k8r-xeGSvOZm1R-eEoxRSuu623e1zyA-7yULuFPM3Y1WMcNUMWHsz32xSqR3srbRkBg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "audience-trailing-slash",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEvIiwic2NoZW1lIjoiZXhhY3QiLCJhbW91bnQiOiIyNTAwMCJ9.kdSZMWWmzUalNlmMLI9lxzebZs4NCbRj5fBF2AgxWWH70zMzxc-PDO2ABlvuGCa7MHssQFHRRpqG7Uo-QEmfAA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "audience-query-variant",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGE_eD0xIiwic2NoZW1lIjoiZXhhY3QiLCJhbW91bnQiOiIyNTAwMCJ9.juAyNXkDN7inkhu28gyFfZIP9_HKI3xpPLN_YhOiI8PphR0b6tKky3tLjYmeSAxFjXcCqvU-zXZf9AS7JK1EBA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "audience-other-host",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2V2aWwuZXhhbXBsZS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.OlaQznUVOh0s8DIopK8nWk2LLRQck9aV5M5URnrflAWYBUJ6tr-8kumqEJguzonKWZ3sLeweYI7cGv5X2yMYCQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "audience-array",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOlsiaHR0cHM6Ly9hcGkuZXhhbXBsZS5jb20vcHJlbWl1bS1kYXRhIl0sInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.lPGNXZzc8nFDEKExkFn3SfAun7l0-tmXebgwO4Jmr5HX60_eLvXeQrskziMmjktw8Ojl5p__IQGQaVPmQVDvAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "audience-missing",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.OoC0iN3T8u0ddeBgBht8yQzTvjxukH1oQh2UvacH-7WhI7M-Zb6-KxLdfxWdKFyYc_XLV5MQgkWaxOCSMfsgAg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_AUDIENCE"
+   }
+  },
+  {
+   "name": "request-url-other-host",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://inference.example.com/premium-data",
+   "result": {
+    "valid": false,
+    "reason": "REQUEST_NOT_AUDIENCE"
+   }
+  },
+  {
+   "name": "request-url-other-path",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://api.example.com/premium-data/extra",
+   "result": {
+    "valid": false,
+    "reason": "REQUEST_NOT_AUDIENCE"
+   }
+  },
+  {
+   "name": "request-url-plain-http",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "http://api.example.com/premium-data",
+   "result": {
+    "valid": false,
+    "reason": "REQUEST_NOT_AUDIENCE"
+   }
+  },
+  {
+   "name": "request-url-userinfo",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://user@api.example.com/premium-data",
+   "result": {
+    "valid": false,
+    "reason": "REQUEST_NOT_AUDIENCE"
+   }
+  },
+  {
+   "name": "request-url-other-port",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "request_url": "https://api.example.com:8443/premium-data",
+   "result": {
+    "valid": false,
+    "reason": "REQUEST_NOT_AUDIENCE"
+   }
+  },
+  {
+   "name": "signature-bit-flip",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.ba8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_SIGNATURE"
+   }
+  },
+  {
+   "name": "payload-tampered",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjEwMDAifQ.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_SIGNATURE"
+   }
+  },
+  {
+   "name": "wrong-signer-trusted-kid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.XR_7ZCjOdKgqve4ldqOjWtgIyqsVS3RVP347F5xIA0cOQvZRmV5-ameIP0Lw523ApjueeHgsZwB59Fsx14ImDA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_SIGNATURE"
+   }
+  },
+  {
+   "name": "unknown-kid",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci11bmtub3duIiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.ZKel_UXw954YjVWYSqtJGwWDHIKpwodKZCfLtbZYtNWtx1nW57qo0YYkkUhjyM7VlX-CZ9n1WBONI86j6Pl4Bg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "UNKNOWN_KEY"
+   }
+  },
+  {
+   "name": "no-kid-two-keys",
+   "token": "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.fUdkhwolpz5x0tRRtddD5tTynhg18X9WJDONxPFzECcUrtXsIgch4yfyqHrV87uIGB6KhPMZY99Mk3yD_YsCDA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "UNKNOWN_KEY"
+   }
+  },
+  {
+   "name": "kid-number",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6NywidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.wLUdUbCnl1O-GjB9t_W4IBU2Rm1NaKS51NxH6Ny6GlM1bFfWmnffZuYqCayPHBdcLfCepcYoXT-OUms6GE8jBg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "kid-empty",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6IiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.olQFggn3_oAwc_nAh4UklYKIi0Ir14fGokK9RZ0W1EB-coUcloLvLLgKzVgwGZ0T5al8FW5P1ZVebatd406TAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "alg-hs256",
+   "token": "eyJhbGciOiJIUzI1NiIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.dB108trzYIqBZ54ORux9Hd_bw6woHKT212FiQi9Z9wkZoqeac5fSPrz6mBtAvVatnfKIyCr49RD7Uv3u48zzAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_ALGORITHM"
+   }
+  },
+  {
+   "name": "alg-es256",
+   "token": "eyJhbGciOiJFUzI1NiIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.yWRZz3VDXubPupKBbTULu8uAUAYLdLtzrQM7WBntI1-WzxuEgmlcB38W-l8_z0RcYLzTrF6qGLURNnrK7ktnDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_ALGORITHM"
+   }
+  },
+  {
+   "name": "alg-missing",
+   "token": "eyJraWQiOiJ2ZWN0b3ItcHJpbWFyeSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.9eNBhEYwxhpL-74Tn4FY1EOATrIn59DK8Ww9-hiyPJIPdSKyLqz_Su-doCgnoIt6C3_UuJrCIMwQgckdI_vvDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "WRONG_ALGORITHM"
+   }
+  },
+  {
+   "name": "alg-none-unsigned",
+   "token": "eyJhbGciOiJub25lIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "header-jku",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwiamt1IjoiaHR0cHM6Ly9hdHRhY2tlci5pbnZhbGlkL2tleXMifQ.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.XAHVniT4WxH7_AFZciIGa6Rn-tFQSd-1IPQzEUOPQFuIRxZa2Tc28E9_dDieNxpI8vjZOCbX4Wkqwe0-NcVCCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TOKEN_SUPPLIED_KEY_MATERIAL"
+   }
+  },
+  {
+   "name": "header-x5u",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwieDV1IjoiaHR0cHM6Ly9hdHRhY2tlci5pbnZhbGlkL2NlcnQifQ.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.PKDMallYcpAVG4gdUzYVGgeUcX98Ht_gAQYvIlroHqH9kfJag99iZryxskVRuSxcHKdScaOy-9ouhCnizPnODQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TOKEN_SUPPLIED_KEY_MATERIAL"
+   }
+  },
+  {
+   "name": "header-jwk",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwiandrIjp7Imt0eSI6Ik9LUCIsImNydiI6IkVkMjU1MTkiLCJ4IjoiQkZhOTFPUWFVdzRRaDZrVTdhUXNQY0hCM2kwbldDOVlraUlGa1hobUJRRSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwiYWxnIjoiRWREU0EiLCJ1c2UiOiJzaWcifX0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bnT1YAZfopie6qX8b8cK_Fr0eiwHjKL43Cg4qCA_G7Xt7l47KgfM0cGsWoBjRCDc3mCU_S-ZT6GYH9z0hH_kAw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TOKEN_SUPPLIED_KEY_MATERIAL"
+   }
+  },
+  {
+   "name": "header-x5c",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwieDVjIjpbXX0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.ImWuCiB-H0GPF8guuo81mAJ5GWHqg4ZvGPEa6pQXFZvoIvMKGzOXZdflpBPua9oGj-kx86B2QflHm9cggO9ECw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "TOKEN_SUPPLIED_KEY_MATERIAL"
+   }
+  },
+  {
+   "name": "header-crit",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwiY3JpdCI6WyJleHAiXX0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.5Tn_iCAP-czQSE_GHPqobMlyHvvK32yEqwW4q1DbFwqKALgKpfwP1euANa_MoJdjxyIn7KzicRpQRH8GbkUZDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "UNSUPPORTED_HEADER"
+   }
+  },
+  {
+   "name": "header-b64-false",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIiwiYjY0IjpmYWxzZX0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.pBm3o6c1XGlJ3FNJJVK7BGArAGO_sqTB6SpiBKQ-NierusYxZt3P-d_jTU37tpWvC96vkUqr9b7y6E61_bwUAQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "UNSUPPORTED_HEADER"
+   }
+  },
+  {
+   "name": "absent-null",
+   "token": null,
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "ABSENT"
+   }
+  },
+  {
+   "name": "absent-empty",
+   "token": "",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "ABSENT"
+   }
+  },
+  {
+   "name": "not-a-jwt",
+   "token": "not-a-jwt",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "two-segments",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "four-segments",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg.e30",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "empty-payload-segment",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0..bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "non-canonical-signature-encoding",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCh",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "base64-padding-character",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg=",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "header-not-json",
+   "token": "bm90IGpzb24.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.9CinZXSH_PIY8GZsE_ji6lxrfwNtw1yKOuB5gPKHxJ3mM5-9LT9s73LgOJ1U94J6BxZLUJtVTGJR0rvicOXaDA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "header-json-array",
+   "token": "WyJFZERTQSJd.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.s5fdT0Z5rwc6lzR-L4qmPw9MQ2UwMT2pL805R05F5shqXE_RX58KggpW5vPEU4lmXausYVbXrxVmr705OthtCQ",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "header-byte-order-mark",
+   "token": "77u_eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.3zYyxrWCvMTe7NJth7sKjpw5YYKvdD6Hr06RDs8ITyISzLuk_azZ1mdGqn5KT-SITx_WtHZ5cfndn8EKVjZeDg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "payload-json-array",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.WzEsMiwzXQ.XZG_6SHa0j_OEsNScUwHFd_zV50QuxGfpsUJ_oqWGSJo7180sAmpmwIUKKJlkuupXNCYZ33mqHeUm0pyvh60AA",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "payload-nan-constant",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOk5hTiwibmJmIjoxNzcwMDAwMDAwLCJleHAiOjE3NzAwMDAxMjAsImF1ZCI6Imh0dHBzOi8vYXBpLmV4YW1wbGUuY29tL3ByZW1pdW0tZGF0YSIsInNjaGVtZSI6ImV4YWN0IiwiYW1vdW50IjoiMjUwMDAifQ.Yc_QW3OCPgKPjRR6JfbTIv46uNGy9Z8Yf9RgWrTrcNkOMmizwsRxw7GIqC2ON7a_-8sy7krYl5Q1fp5mJXTaBg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "token-too-long",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIiwicGFkIjoieHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eCJ9.vqaY_gFUXL25m1dbKhwM2lkCibnDjHlEsaQKuUmj-Yua_nXXgSNpaSoNOIEXKDKbjpNzqB_bBGB4Vb045JAyDw",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "MALFORMED_TOKEN"
+   }
+  },
+  {
+   "name": "config-leeway-above-bound",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 31,
+   "result": {
+    "valid": false,
+    "reason": "BAD_LEEWAY"
+   }
+  },
+  {
+   "name": "config-leeway-negative",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": -1,
+   "result": {
+    "valid": false,
+    "reason": "BAD_LEEWAY"
+   }
+  },
+  {
+   "name": "config-leeway-string",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": "5",
+   "result": {
+    "valid": false,
+    "reason": "BAD_LEEWAY"
+   }
+  },
+  {
+   "name": "config-expected-amount-missing",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": null,
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_EXPECTED_AMOUNT"
+   }
+  },
+  {
+   "name": "config-expected-amount-below-minimum",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "999",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_EXPECTED_AMOUNT"
+   }
+  },
+  {
+   "name": "config-expected-amount-not-canonical",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000.0",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_EXPECTED_AMOUNT"
+   }
+  },
+  {
+   "name": "config-expected-amount-boolean",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": true,
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_EXPECTED_AMOUNT"
+   }
+  },
+  {
+   "name": "config-audience-http",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "http://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_AUDIENCE"
+   }
+  },
+  {
+   "name": "config-audience-query",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data?x=1",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_AUDIENCE"
+   }
+  },
+  {
+   "name": "config-audience-uppercase-host",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://API.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_AUDIENCE"
+   }
+  },
+  {
+   "name": "config-audience-no-path",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_AUDIENCE"
+   }
+  },
+  {
+   "name": "config-unknown-scheme",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "fixed",
+   "expected_amount": "25000",
+   "now": 1770000060,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "UNKNOWN_SCHEME"
+   }
+  },
+  {
+   "name": "config-now-fraction",
+   "token": "eyJhbGciOiJFZERTQSIsImtpZCI6InZlY3Rvci1wcmltYXJ5IiwidHlwIjoiSldUIn0.eyJpYXQiOjE3NzAwMDAwMDAsIm5iZiI6MTc3MDAwMDAwMCwiZXhwIjoxNzcwMDAwMTIwLCJhdWQiOiJodHRwczovL2FwaS5leGFtcGxlLmNvbS9wcmVtaXVtLWRhdGEiLCJzY2hlbWUiOiJleGFjdCIsImFtb3VudCI6IjI1MDAwIn0.bK8jAkZNwNBiOMTqnEIiIJxSeRJXU5rqU2g6o0TCTsFJu0E7hiqPiPsSgN-o4dROdsmuGlSaz1-tr5eNHcTzCg",
+   "jwks": "primary",
+   "expected_audience": "https://api.example.com/premium-data",
+   "scheme": "exact",
+   "expected_amount": "25000",
+   "now": 1770000060.5,
+   "leeway": 5,
+   "result": {
+    "valid": false,
+    "reason": "BAD_NOW"
+   }
+  }
+ ]
+}
