@@ -69,11 +69,33 @@ detector, approval, action, after-state, source identity, and readback.
 `infrastructure_repaired` stays false and `repair_conclusion` stays
 `NOT_CONCLUDED`.
 
-## Payment context
+## Payment context (deprecated)
+
+`science_evidence/payment.py` is deprecated in favour of the canonical
+validators in szl-holdings/szl-trust: `scripts/x402_payment_context.py`
+(Python) and `ops/evidence-snapshot-worker/src/payment-context.mjs` (Workers).
+It stays for local tests and emits a `DeprecationWarning` on every call. It
+decides the shared vectors in `tests/fixtures/x402-payment-context.v1.json`, a
+pinned copy of szl-trust's `tests/vectors/x402-payment-context.v1.json`, the
+same way the canonical validators do. The request-URL vectors are skipped
+because this API has no request-URL binding.
 
 Local tests validate Ed25519 `PAYMENT-CONTEXT` tokens against injected keys.
+The caller must pass the route's `scheme` and `expected_amount`. An `exact`
+context must sign exactly that amount and an `upto` maximum must not exceed
+it, so a context signed under a cheaper rule is rejected (`AMOUNT_MISMATCH`,
+`ABOVE_CONFIGURED_MAXIMUM`, or `SCHEME` for the other scheme). `nbf`, `exp`
+and a future `iat` get a 5-second leeway by default and at most 30 seconds.
+Token-supplied key material (`jku`, `jwk`, `x5u`, `x5c`) and `crit` or `b64`
+headers are rejected.
+
 `exact` responses do not set `PAYMENT-SETTLEMENT`. `upto` may set that header
 only for a successful status and an atomic amount within the authorized maximum.
-Origin code does not create `PAYMENT-RESPONSE`. Live use is not authorized:
-account monetization was observed as `pending`, idempotency is unresolved, and
-no wallet, price, or audience has been approved.
+Origin code does not create `PAYMENT-RESPONSE`.
+
+Cloudflare's documented claims (`iat`, `nbf`, `exp`, `aud`, `scheme`, `amount`)
+define no `jti` or nonce. Replay protection is not implemented here, and
+idempotency is unresolved. Live use is not authorized: the Cloudflare account
+was approved for the Monetization Gateway closed beta on 2026-11-02 (szl-trust
+activation record), but no science-evidence route, price or audience has been
+approved, and this module is not wired to any origin.
