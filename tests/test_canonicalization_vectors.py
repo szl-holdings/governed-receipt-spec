@@ -1,15 +1,15 @@
 """Self-consistency of conformance/canonicalization-v1.json (offline, stdlib).
 
-Checks every recorded sha256 against its bytes, reproduces both legacy profiles
-with the stdlib json parameters they are defined by, and, when the optional
-reference implementations are installed, checks the rfc8785 rows too.
+Checks every recorded sha256 against its bytes and reproduces both legacy
+profiles with the stdlib json parameters they are defined by. When the
+optional ``rfc8785`` reference package is installed, the rfc8785 rows are
+checked against it too; otherwise that test is skipped.
 """
 import hashlib
 import json
 import math
+import unittest
 from pathlib import Path
-
-import pytest
 
 DOC = json.loads((Path(__file__).resolve().parents[1] / "conformance" /
                   "canonicalization-v1.json").read_text("utf-8"))
@@ -36,45 +36,59 @@ def _has_nonfinite(v):
     return False
 
 
-def test_schema_and_ids():
-    assert DOC["schema"] == "szl.canonicalization.vectors/v1"
-    assert DOC["profiles"] == ["szl.canon/v1", "szl.lambda/v1", "rfc8785"]
-    ids = [c["id"] for c in DOC["cases"]]
-    assert len(ids) == len(set(ids))
+def _legacy(value, ensure_ascii):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=ensure_ascii, allow_nan=False)
 
 
-@pytest.mark.parametrize("case", DOC["cases"], ids=lambda c: c["id"])
-def test_digests_match_bytes(case):
-    for exp in case["expected"].values():
-        if not exp.get("reject"):
-            assert hashlib.sha256(exp["utf8"].encode("utf-8")).hexdigest() == exp["sha256"]
+class CanonicalizationVectorTests(unittest.TestCase):
+    def test_schema_and_ids(self):
+        self.assertEqual(DOC["schema"], "szl.canonicalization.vectors/v1")
+        self.assertEqual(DOC["profiles"], ["szl.canon/v1", "szl.lambda/v1", "rfc8785"])
+        ids = [c["id"] for c in DOC["cases"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertGreaterEqual(len(ids), 18)
+
+    def test_digests_match_bytes(self):
+        for case in DOC["cases"]:
+            for profile, exp in case["expected"].items():
+                if exp.get("reject"):
+                    continue
+                with self.subTest(case=case["id"], profile=profile):
+                    self.assertEqual(
+                        hashlib.sha256(exp["utf8"].encode("utf-8")).hexdigest(), exp["sha256"])
+
+    def test_legacy_profiles_reproduce_with_stdlib(self):
+        for case in DOC["cases"]:
+            value = _decode(case["input"])
+            for profile, ensure_ascii in LEGACY.items():
+                exp = case["expected"][profile]
+                with self.subTest(case=case["id"], profile=profile):
+                    if exp.get("reject"):
+                        self.assertTrue(_has_nonfinite(value))
+                        with self.assertRaises(ValueError):
+                            _legacy(value, ensure_ascii)
+                    else:
+                        self.assertEqual(_legacy(value, ensure_ascii), exp["utf8"])
+
+    def test_rfc8785_rows_against_reference(self):
+        try:
+            import rfc8785
+        except ImportError:
+            self.skipTest("optional rfc8785 reference package not installed")
+        for case in DOC["cases"]:
+            value = _decode(case["input"])
+            exp = case["expected"]["rfc8785"]
+            with self.subTest(case=case["id"]):
+                try:
+                    ref = rfc8785.dumps(value)
+                except Exception:
+                    self.assertTrue(exp.get("reject")
+                                    or "rfc8785" in case.get("implementations_may_reject", []))
+                    continue
+                self.assertFalse(exp.get("reject"))
+                self.assertEqual(ref.decode("utf-8"), exp["utf8"])
 
 
-@pytest.mark.parametrize("case", DOC["cases"], ids=lambda c: c["id"])
-@pytest.mark.parametrize("profile", sorted(LEGACY))
-def test_legacy_profiles_reproduce_with_stdlib(case, profile):
-    value = _decode(case["input"])
-    exp = case["expected"][profile]
-    if exp.get("reject"):
-        assert _has_nonfinite(value)
-        with pytest.raises(ValueError):
-            json.dumps(value, sort_keys=True, separators=(",", ":"),
-                       ensure_ascii=LEGACY[profile], allow_nan=False)
-        return
-    got = json.dumps(value, sort_keys=True, separators=(",", ":"),
-                     ensure_ascii=LEGACY[profile], allow_nan=False)
-    assert got == exp["utf8"]
-
-
-@pytest.mark.parametrize("case", DOC["cases"], ids=lambda c: c["id"])
-def test_rfc8785_rows_against_reference(case):
-    rfc8785 = pytest.importorskip("rfc8785")
-    value = _decode(case["input"])
-    exp = case["expected"]["rfc8785"]
-    try:
-        ref = rfc8785.dumps(value)
-    except Exception:
-        assert exp.get("reject") or "rfc8785" in case.get("implementations_may_reject", [])
-        return
-    assert not exp.get("reject")
-    assert ref.decode("utf-8") == exp["utf8"]
+if __name__ == "__main__":
+    unittest.main()
